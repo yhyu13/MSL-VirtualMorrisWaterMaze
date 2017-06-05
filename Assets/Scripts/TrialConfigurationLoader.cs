@@ -9,6 +9,7 @@ public class TrialConfigurationLoader : MonoBehaviour {
     private int trial;
     private string subID;
     private int iteration;
+    public BinaryLogger binaryLogger;
 
     public GameObject[] orderedLandmarks;
     public GameObject player;
@@ -75,6 +76,7 @@ public class TrialConfigurationLoader : MonoBehaviour {
         hills.SetActive(c.HillVisibilities[trial]);
 
         timer.trialTime = c.TrialTimeLimits[trial];
+	binaryLogger.numberOfExecutionsForThisTrial = numberOfExecutions;
 
         player.GetComponentInChildren<AudioListener>().enabled = c.SoundEffectsEnabled[trial];
 
