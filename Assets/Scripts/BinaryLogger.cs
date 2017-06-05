@@ -5,6 +5,12 @@ using System;
 using System.Collections.Generic;
 
 public class BinaryLogger : MonoBehaviour {
+	
+    public TrialConfigurationLoader configLoader; 
+    public int numberOfExecutionsForThisTrial; 
+    public int recordEveryWhatPercent;
+    private int iterations; 
+    private bool doRecord;
 
     public string dateTimeFormat = "yyyy-MM-dd_HH-mm-ss";
     public string filenameFormat = "<subid>_<trial>_<iteration>_<datetime>.dat";
@@ -40,6 +46,12 @@ public class BinaryLogger : MonoBehaviour {
         DateTime time = DateTime.Now;
         string timeString = time.ToString(dateTimeFormat);
         filename = filename.Replace("<datetime>", timeString);
+		
+	doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
+        if (!doRecord) // change
+        {
+            return;
+        }
 
         Stream stream = new StreamWriter(filename).BaseStream;
         writer = new BinaryWriter(stream);
@@ -47,6 +59,12 @@ public class BinaryLogger : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+	
+	if (!doRecord)
+        {
+            return;
+        }
+	
         if (firstUpdate)
         {
             
@@ -90,11 +108,19 @@ public class BinaryLogger : MonoBehaviour {
 
     void OnApplicationQuit()
     {
+	if (!doRecord)
+        {
+            return;
+        }
         writer.Close();
     }
 
     void OnDisable()
     {
+	if (!doRecord)
+        {
+            return;
+        }
         writer.Close();
     }
 }
