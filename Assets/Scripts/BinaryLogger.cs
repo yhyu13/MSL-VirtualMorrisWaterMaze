@@ -5,6 +5,11 @@ using System;
 using System.Collections.Generic;
 
 public class BinaryLogger : MonoBehaviour {
+    public TrialConfigurationLoader configLoader; // change
+    public int numberOfExecutionsForThisTrial; // change
+    public int recordEveryWhatPercent;
+    private int iterations; // change
+    private bool doRecord;
 
     public string dateTimeFormat = "yyyy-MM-dd_HH-mm-ss";
     public string filenameFormat = "<subid>_<trial>_<iteration>_<datetime>.dat";
@@ -33,7 +38,10 @@ public class BinaryLogger : MonoBehaviour {
         else
             filename = filename.Replace("<trial>", "u");
         if (PlayerPrefs.HasKey("iteration"))
+        {
+            iterations = PlayerPrefs.GetInt("iteration");
             filename = filename.Replace("<iteration>", "" + PlayerPrefs.GetInt("iteration"));
+        }
         else
             filename = filename.Replace("<iteration>", "u");
 
@@ -41,12 +49,25 @@ public class BinaryLogger : MonoBehaviour {
         string timeString = time.ToString(dateTimeFormat);
         filename = filename.Replace("<datetime>", timeString);
 
+        // doRecord is a boolean which indicate whether or not to record this trial
+        doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
+        if (!doRecord) // change
+        {
+            return;
+        }
+
         Stream stream = new StreamWriter(filename).BaseStream;
         writer = new BinaryWriter(stream);
 	}
 	
 	// Update is called once per frame
 	void Update () {
+
+        if (!doRecord)
+        {
+            return;
+        }
+
         if (firstUpdate)
         {
             
@@ -90,11 +111,19 @@ public class BinaryLogger : MonoBehaviour {
 
     void OnApplicationQuit()
     {
+        if (!doRecord) // change
+        {
+            return;
+        }
         writer.Close();
     }
 
     void OnDisable()
     {
+        if (!doRecord) // change
+        {
+            return;
+        }
         writer.Close();
     }
 }

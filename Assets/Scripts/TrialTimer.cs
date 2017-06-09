@@ -43,8 +43,8 @@ public class TrialTimer : MonoBehaviour {
         done = true;
         configLoader.NextIteration();
         pause.resetOnKey = true;
-        Debug.Log("Restarting Scene");
-        CameraFade.SetScreenOverlayColor(Color.black);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        // go back to the menu once a trial is over
+        SceneManager.LoadScene("Menu");
     }
 }

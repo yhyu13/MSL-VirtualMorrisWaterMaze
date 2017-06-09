@@ -18,6 +18,7 @@ public class TrialConfigurationLoader : MonoBehaviour {
     public GameObject flags;
     public GameObject hills;
     public TrialTimer timer;
+    public BinaryLogger binaryLogger; // change
 
     // Use this for initialization
     void Start () {
@@ -75,6 +76,7 @@ public class TrialConfigurationLoader : MonoBehaviour {
         hills.SetActive(c.HillVisibilities[trial]);
 
         timer.trialTime = c.TrialTimeLimits[trial];
+        binaryLogger.numberOfExecutionsForThisTrial = numberOfExecutions; // change
 
         player.GetComponentInChildren<AudioListener>().enabled = c.SoundEffectsEnabled[trial];
 

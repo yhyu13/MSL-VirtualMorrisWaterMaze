@@ -10,6 +10,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
     [RequireComponent(typeof (AudioSource))]
     public class FirstPersonController : MonoBehaviour
     {
+        private bool m_humanPlayerMode = true; //change
+        private int m_turnDirection; //change
+        private float m_turnMagnitude; //change
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
         [SerializeField] private float m_RunSpeed;
@@ -47,6 +50,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_WalkSpeed = 0f;
         }
 
+        public void setHumanPlayerMode(bool mode)
+        {
+            m_humanPlayerMode = mode;
+        }
+
+        public void setTurnDirectionAndMagnitude(int direc, float magni)
+        {
+            m_turnDirection = direc;
+            m_turnMagnitude = magni;
+        }
+
         public void SetWalkSpeed(float s)
         {
             m_WalkSpeed = s;
@@ -71,7 +85,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Update is called once per frame
         private void Update()
         {
-            RotateView();
+            if (m_humanPlayerMode == true)
+            {
+                RotateView(); // change       
+            }
+            else
+            {
+                //if humanPlayerMode == false, enable agent control.
+                MakeATurn(); //change
+            }
+
             // the jump state needs to read here to make sure it is not missed
             if (!m_Jump)
             {
@@ -106,18 +129,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             float speed;
             GetInput(out speed);
-            // always move along the camera forward as it is the direction that it being aimed at
-            Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x;
-
             // get a normal for the surface that is being touched to move along it
             RaycastHit hitInfo;
             Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
                                m_CharacterController.height/2f, ~0, QueryTriggerInteraction.Ignore);
-            desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
-            m_MoveDir.x = desiredMove.x*speed;
-            m_MoveDir.z = desiredMove.z*speed;
-
+            // always move along the camera forward as it is the direction that it being aimed at
+            m_MoveDir = transform.rotation * Vector3.forward * speed * Time.deltaTime * 50;
 
             if (m_CharacterController.isGrounded)
             {
@@ -247,6 +265,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void RotateView()
         {
             m_MouseLook.LookRotation (transform, m_Camera.transform);
+        }
+
+        public void MakeATurn() 
+        {
+            //change
+            // direction = -1 means turning left, direction = 1 means turning right, direction = 0 means going straight.
+            transform.Rotate(0, Time.deltaTime * m_turnDirection * m_turnMagnitude, 0, Space.Self);
         }
 
 

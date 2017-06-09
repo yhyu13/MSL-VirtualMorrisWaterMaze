@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityStandardAssets.Characters.FirstPerson;
 using WindowsInput;
 
 // State object for reading client data asynchronously  
@@ -24,6 +25,8 @@ public class StateObject
 
 public class AsynchronousSocketListener : MonoBehaviour
 {
+    //public BoxCollider rewardTrigger;
+    public FirstPersonController FPScontroller;
     public static bool instanceExists = false;
 
     public enum FrameTransmissionProtocol { Continuous, AsReply, OnRequest }
@@ -151,6 +154,12 @@ public class AsynchronousSocketListener : MonoBehaviour
         {
             SceneManager.LoadScene((int)m.Value);
         }
+        else if (m.Type == "HumanPlayerMode")
+        {
+            //change
+            // set humanPlayerMode
+            FPScontroller.setHumanPlayerMode((bool)m.Value);
+        }
         else if (m.Type == "PlayerPrefsS")
         {
             string[] vals = (string[])m.Value;
@@ -168,9 +177,17 @@ public class AsynchronousSocketListener : MonoBehaviour
         }
         else if (m.Type == "Key")
         {
-            if(m.Value != null)
+            if (m.Value != null)
+            {
                 //Execute simulate keystroke
-                WindowsInput.InputSimulator.SimulateKeyDown((VirtualKeyCode)m.Value);
+                //WindowsInput.InputSimulator.SimulateKeyDown((VirtualKeyCode)m.Value);
+
+                //change
+                string temp = (String)m.Value;
+                int direc = (int)temp[0];
+                float magni = float.Parse(temp.Substring(1));
+                FPScontroller.setTurnDirectionAndMagnitude(direc, magni);
+            }
         }
         else if (m.Type == "Reward")
         {
@@ -184,6 +201,7 @@ public class AsynchronousSocketListener : MonoBehaviour
 
     public byte[] GetRewardFeedback()
     {
+        
         throw new NotImplementedException();
     }
 
