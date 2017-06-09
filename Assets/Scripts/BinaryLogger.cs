@@ -5,10 +5,18 @@ using System;
 using System.Collections.Generic;
 
 public class BinaryLogger : MonoBehaviour {
+<<<<<<< HEAD
     public TrialConfigurationLoader configLoader; // change
     public int numberOfExecutionsForThisTrial; // change
     public int recordEveryWhatPercent;
     private int iterations; // change
+=======
+	
+    public TrialConfigurationLoader configLoader; 
+    public int numberOfExecutionsForThisTrial; 
+    public int recordEveryWhatPercent;
+    private int iterations; 
+>>>>>>> origin/master
     private bool doRecord;
 
     public string dateTimeFormat = "yyyy-MM-dd_HH-mm-ss";
@@ -48,6 +56,12 @@ public class BinaryLogger : MonoBehaviour {
         DateTime time = DateTime.Now;
         string timeString = time.ToString(dateTimeFormat);
         filename = filename.Replace("<datetime>", timeString);
+		
+	doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
+        if (!doRecord) // change
+        {
+            return;
+        }
 
         // doRecord is a boolean which indicate whether or not to record this trial
         doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
@@ -62,12 +76,21 @@ public class BinaryLogger : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+<<<<<<< HEAD
 
         if (!doRecord)
         {
             return;
         }
 
+=======
+	
+	if (!doRecord)
+        {
+            return;
+        }
+	
+>>>>>>> origin/master
         if (firstUpdate)
         {
             
@@ -111,7 +134,11 @@ public class BinaryLogger : MonoBehaviour {
 
     void OnApplicationQuit()
     {
+<<<<<<< HEAD
         if (!doRecord) // change
+=======
+	if (!doRecord)
+>>>>>>> origin/master
         {
             return;
         }
@@ -120,7 +147,11 @@ public class BinaryLogger : MonoBehaviour {
 
     void OnDisable()
     {
+<<<<<<< HEAD
         if (!doRecord) // change
+=======
+	if (!doRecord)
+>>>>>>> origin/master
         {
             return;
         }
