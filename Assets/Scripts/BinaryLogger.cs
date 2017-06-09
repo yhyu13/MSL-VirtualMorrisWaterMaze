@@ -5,19 +5,13 @@ using System;
 using System.Collections.Generic;
 
 public class BinaryLogger : MonoBehaviour {
-<<<<<<< HEAD
+
+    private bool doRecord;
+
     public TrialConfigurationLoader configLoader; // change
     public int numberOfExecutionsForThisTrial; // change
     public int recordEveryWhatPercent;
     private int iterations; // change
-=======
-	
-    public TrialConfigurationLoader configLoader; 
-    public int numberOfExecutionsForThisTrial; 
-    public int recordEveryWhatPercent;
-    private int iterations; 
->>>>>>> origin/master
-    private bool doRecord;
 
     public string dateTimeFormat = "yyyy-MM-dd_HH-mm-ss";
     public string filenameFormat = "<subid>_<trial>_<iteration>_<datetime>.dat";
@@ -57,7 +51,7 @@ public class BinaryLogger : MonoBehaviour {
         string timeString = time.ToString(dateTimeFormat);
         filename = filename.Replace("<datetime>", timeString);
 		
-	doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
+	    doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
         if (!doRecord) // change
         {
             return;
@@ -76,21 +70,11 @@ public class BinaryLogger : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-<<<<<<< HEAD
 
         if (!doRecord)
         {
             return;
         }
-
-=======
-	
-	if (!doRecord)
-        {
-            return;
-        }
-	
->>>>>>> origin/master
         if (firstUpdate)
         {
             
@@ -134,11 +118,7 @@ public class BinaryLogger : MonoBehaviour {
 
     void OnApplicationQuit()
     {
-<<<<<<< HEAD
-        if (!doRecord) // change
-=======
-	if (!doRecord)
->>>>>>> origin/master
+	    if (!doRecord)
         {
             return;
         }
@@ -147,11 +127,7 @@ public class BinaryLogger : MonoBehaviour {
 
     void OnDisable()
     {
-<<<<<<< HEAD
-        if (!doRecord) // change
-=======
-	if (!doRecord)
->>>>>>> origin/master
+	    if (!doRecord)
         {
             return;
         }

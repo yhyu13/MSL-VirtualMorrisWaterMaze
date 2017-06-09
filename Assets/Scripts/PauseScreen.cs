@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 
 public class PauseScreen : MonoBehaviour {
 
+    public string pauseMessage;
+
     public ColorCorrectionCurves screenEffect;
     public FirstPersonController controller;
     public Canvas overlay;
@@ -15,6 +17,11 @@ public class PauseScreen : MonoBehaviour {
     public string pauseText;
     public KeyCode pauseKey;
     public bool resetOnKey;
+
+    public void SetPauseMessage(string message)
+    {
+        pauseMessage = message;
+    }
 
     // Update is called once per frame
     void RefreshPauseState () {
@@ -26,7 +33,7 @@ public class PauseScreen : MonoBehaviour {
 
     void Update()
     {
-        if (Input.GetKeyUp(pauseKey))
+        if (Input.GetKeyUp(pauseKey) || pauseMessage == "Space")
         {
             if (resetOnKey)
             {

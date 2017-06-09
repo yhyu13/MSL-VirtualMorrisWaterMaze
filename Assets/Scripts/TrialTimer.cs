@@ -45,6 +45,6 @@ public class TrialTimer : MonoBehaviour {
         pause.resetOnKey = true;
 
         // go back to the menu once a trial is over
-        SceneManager.LoadScene("Menu");
+        //SceneManager.LoadScene("Menu");
     }
 }

@@ -27,6 +27,8 @@ public class AsynchronousSocketListener : MonoBehaviour
 {
     //public BoxCollider rewardTrigger;
     public FirstPersonController FPScontroller;
+    public PauseScreen pause;
+
     public static bool instanceExists = false;
 
     public enum FrameTransmissionProtocol { Continuous, AsReply, OnRequest }
@@ -154,11 +156,23 @@ public class AsynchronousSocketListener : MonoBehaviour
         {
             SceneManager.LoadScene((int)m.Value);
         }
+        else if (m.Type == "Pause")
+        {
+            //change
+            // set humanPlayerMode
+            if (m.Value != null)
+            {
+                pause.pauseMessage = (string)m.Value;
+            }
+        }
         else if (m.Type == "HumanPlayerMode")
         {
             //change
             // set humanPlayerMode
-            FPScontroller.setHumanPlayerMode((bool)m.Value);
+            if (m.Value != null)
+            {
+                FPScontroller.setHumanPlayerMode((bool)m.Value);
+            }
         }
         else if (m.Type == "PlayerPrefsS")
         {
@@ -184,7 +198,7 @@ public class AsynchronousSocketListener : MonoBehaviour
 
                 //change
                 string temp = (String)m.Value;
-                int direc = (int)temp[0];
+                int direc = temp[0] - '0'; // because char internally is a number, to get its true numeric value, just subtract '0'
                 float magni = float.Parse(temp.Substring(1));
                 FPScontroller.setTurnDirectionAndMagnitude(direc, magni);
             }
