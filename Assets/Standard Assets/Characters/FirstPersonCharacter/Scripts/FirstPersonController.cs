@@ -10,9 +10,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
     [RequireComponent(typeof (AudioSource))]
     public class FirstPersonController : MonoBehaviour
     {
-        private bool m_humanPlayerMode = true; //change
-        private int m_turnDirection; //change
-        private float m_turnMagnitude; //change
+        private bool m_humanPlayerMode = true; //false; //change
+        private int m_turnDirection; //= 1; //change
+        private float m_turnMagnitude; //= 30.0f; //change
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
         [SerializeField] private float m_RunSpeed;

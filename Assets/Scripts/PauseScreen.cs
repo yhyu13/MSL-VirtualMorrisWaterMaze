@@ -33,7 +33,7 @@ public class PauseScreen : MonoBehaviour {
 
     void Update()
     {
-        if (Input.GetKeyUp(pauseKey) || pauseMessage == "Space")
+        if (Input.GetKeyUp(pauseKey) || pauseMessage == "Space") //change
         {
             if (resetOnKey)
             {

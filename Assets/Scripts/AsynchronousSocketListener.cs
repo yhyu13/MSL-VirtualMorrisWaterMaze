@@ -27,6 +27,7 @@ public class AsynchronousSocketListener : MonoBehaviour
 {
     //public BoxCollider rewardTrigger;
     public FirstPersonController FPScontroller;
+    public CollisionEventTrigger CollisionEventTrigger;
     public PauseScreen pause;
 
     public static bool instanceExists = false;
@@ -36,7 +37,7 @@ public class AsynchronousSocketListener : MonoBehaviour
     private int incomingBufferSize = 1024;
     public int port = 5005;
     public static string endToken = "<EOF>";
-    public FrameTransmissionProtocol frame_protocol = FrameTransmissionProtocol.AsReply;
+    public FrameTransmissionProtocol frame_protocol = FrameTransmissionProtocol.OnRequest;
 
     private RenderTexture transmissionRenderTexture;
     private Texture2D transmissionTexture;
@@ -54,8 +55,7 @@ public class AsynchronousSocketListener : MonoBehaviour
         // Establish the local endpoint for the socket.  
         // The DNS name of the computer  
         // running the listener is "host.contoso.com".  
-        IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
-        IPAddress ipAddress = ipHostInfo.AddressList[0];
+        IPAddress ipAddress = Dns.GetHostEntry("localhost").AddressList[0];
         localEndPoint = new IPEndPoint(ipAddress, port);
 
         // Create a TCP/IP socket.  
@@ -211,12 +211,39 @@ public class AsynchronousSocketListener : MonoBehaviour
             Send(handler, GetRewardFeedback());
             Send(handler, EOF);
         }
+        else if (m.Type == "Score")
+        {
+            byte[] typeData = Encoding.UTF8.GetBytes("Score");
+            byte[] EOF = Encoding.UTF8.GetBytes(endToken);
+            Send(handler, typeData);
+            Send(handler, GetScoreFeedback());
+            Send(handler, EOF);
+        }else if (m.Type == "EpisodeEnd")
+        {
+            byte[] typeData = Encoding.UTF8.GetBytes("EpisodeEnd");
+            byte[] EOF = Encoding.UTF8.GetBytes(endToken);
+            Send(handler, typeData);
+            Send(handler, GetEpisodeEndFeedback());
+            Send(handler, EOF);
+        }
     }
 
     public byte[] GetRewardFeedback()
     {
-        
-        throw new NotImplementedException();
+        byte[] reward = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionReward).ToString());
+        return reward;
+    }
+
+    public byte[] GetScoreFeedback()
+    {
+        byte[] score = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionScore).ToString());
+        return score;
+    }
+
+    public byte[] GetEpisodeEndFeedback()
+    {
+        byte[] paused = Encoding.UTF8.GetBytes((pause.pause.ToString()));
+        return paused;
     }
 
     public void SendFrame(Socket handler)

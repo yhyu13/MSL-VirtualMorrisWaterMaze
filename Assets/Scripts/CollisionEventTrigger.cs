@@ -9,12 +9,17 @@ public class CollisionEventTrigger : MonoBehaviour {
     public bool triggerOnCollisionEnter = true;
     public bool triggerOnTriggerEnter = true;
     public CollisionEventTriggerType eventType = CollisionEventTriggerType.Start;
+    public int collisionScore = 0;
+    public int collisionReward = 0;
 
     void OnCollisionEnter(Collision c)
     {
         Debug.Log("OnCollisionEnter");
         if(triggerOnCollisionEnter)
             BeginNamedTweens(c.collider, targetObject, tweenEventName, eventType);
+            collisionScore += 50;
+            collisionReward += 50;
+        collisionReward = 0;
     }
 
     void OnTriggerEnter(Collider c)
@@ -22,6 +27,9 @@ public class CollisionEventTrigger : MonoBehaviour {
         Debug.Log("OnTriggerEnter");
         if (triggerOnTriggerEnter)
             BeginNamedTweens(c, targetObject, tweenEventName, eventType);
+            collisionScore += 50;
+            collisionReward += 50;
+        collisionReward = 0;
     }
 
     static void BeginNamedTweens(Collider source, GameObject target, string name, CollisionEventTriggerType type)
