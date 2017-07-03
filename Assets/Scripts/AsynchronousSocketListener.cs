@@ -37,7 +37,7 @@ public class AsynchronousSocketListener : MonoBehaviour
     private int incomingBufferSize = 1024;
     public int port = 5005;
     public static string endToken = "<EOF>";
-    public FrameTransmissionProtocol frame_protocol = FrameTransmissionProtocol.OnRequest;
+    public FrameTransmissionProtocol frame_protocol = FrameTransmissionProtocol.AsReply;
 
     private RenderTexture transmissionRenderTexture;
     private Texture2D transmissionTexture;
@@ -56,8 +56,9 @@ public class AsynchronousSocketListener : MonoBehaviour
         // The DNS name of the computer  
         // running the listener is "host.contoso.com".  
         IPAddress ipAddress = Dns.GetHostEntry("localhost").AddressList[0];
+        Debug.Log(ipAddress.ToString());
         localEndPoint = new IPEndPoint(ipAddress, port);
-
+        
         // Create a TCP/IP socket.  
         listener = new Socket(AddressFamily.InterNetwork,
             SocketType.Stream, ProtocolType.Tcp);
@@ -152,27 +153,10 @@ public class AsynchronousSocketListener : MonoBehaviour
             }
         }
         Debug.Log("Processing Message Type=" + (m.Type==null?"null":m.Type) + ",Value=" + (m.Value==null?"null":m.Value.ToString()));
+
         if (m.Type == "Scene")
         {
             SceneManager.LoadScene((int)m.Value);
-        }
-        else if (m.Type == "Pause")
-        {
-            //change
-            // set humanPlayerMode
-            if (m.Value != null)
-            {
-                pause.pauseMessage = (string)m.Value;
-            }
-        }
-        else if (m.Type == "HumanPlayerMode")
-        {
-            //change
-            // set humanPlayerMode
-            if (m.Value != null)
-            {
-                FPScontroller.setHumanPlayerMode((bool)m.Value);
-            }
         }
         else if (m.Type == "PlayerPrefsS")
         {
@@ -189,61 +173,63 @@ public class AsynchronousSocketListener : MonoBehaviour
             string[] vals = (string[])m.Value;
             PlayerPrefs.SetInt(vals[0], int.Parse(vals[1]));
         }
-        else if (m.Type == "Key")
+        else if (m.Type == "Pause")
         {
-            if (m.Value != null)
+            //change
+            // set pause condition
+            if (pause != null)
             {
-                //Execute simulate keystroke
-                //WindowsInput.InputSimulator.SimulateKeyDown((VirtualKeyCode)m.Value);
-
-                //change
-                string temp = (String)m.Value;
-                int direc = temp[0] - '0'; // because char internally is a number, to get its true numeric value, just subtract '0'
-                float magni = float.Parse(temp.Substring(1));
+                pause.pauseMessage = (string)m.Value;
+            }
+        }
+        else if (m.Type == "Rotate")
+        {
+            //Execute simulate keystroke
+            //change
+            string temp = (string)m.Value;
+            int direc = temp[0] - '1'; // because char internally is a number, to get its true numeric value, just subtract '0'
+            float magni = float.Parse(temp.Substring(1));
+            if (FPScontroller != null)
+            {
                 FPScontroller.setTurnDirectionAndMagnitude(direc, magni);
             }
         }
         else if (m.Type == "Reward")
         {
-            byte[] typeData = Encoding.UTF8.GetBytes("Reward");
-            byte[] EOF = Encoding.UTF8.GetBytes(endToken);
-            Send(handler, typeData);
-            Send(handler, GetRewardFeedback());
-            Send(handler, EOF);
+            if (CollisionEventTrigger != null)
+            {
+                byte[] typeData = Encoding.UTF8.GetBytes("Reward");
+                byte[] EOF = Encoding.UTF8.GetBytes(endToken);
+                byte[] reward = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionReward).ToString());
+                Send(handler, typeData);
+                Send(handler, reward);
+                Send(handler, EOF);
+            }
         }
         else if (m.Type == "Score")
         {
-            byte[] typeData = Encoding.UTF8.GetBytes("Score");
-            byte[] EOF = Encoding.UTF8.GetBytes(endToken);
-            Send(handler, typeData);
-            Send(handler, GetScoreFeedback());
-            Send(handler, EOF);
-        }else if (m.Type == "EpisodeEnd")
-        {
-            byte[] typeData = Encoding.UTF8.GetBytes("EpisodeEnd");
-            byte[] EOF = Encoding.UTF8.GetBytes(endToken);
-            Send(handler, typeData);
-            Send(handler, GetEpisodeEndFeedback());
-            Send(handler, EOF);
+            if (CollisionEventTrigger != null)
+            {
+                byte[] typeData = Encoding.UTF8.GetBytes("Score");
+                byte[] EOF = Encoding.UTF8.GetBytes(endToken);
+                byte[] score = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionScore).ToString());
+                Send(handler, typeData);
+                Send(handler, score);
+                Send(handler, EOF);
+            }
         }
-    }
-
-    public byte[] GetRewardFeedback()
-    {
-        byte[] reward = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionReward).ToString());
-        return reward;
-    }
-
-    public byte[] GetScoreFeedback()
-    {
-        byte[] score = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionScore).ToString());
-        return score;
-    }
-
-    public byte[] GetEpisodeEndFeedback()
-    {
-        byte[] paused = Encoding.UTF8.GetBytes((pause.pause.ToString()));
-        return paused;
+        else if (m.Type == "EpisodeEnd")
+        {
+            if (pause != null)
+            {
+                byte[] typeData = Encoding.UTF8.GetBytes("EpisodeEnd");
+                byte[] EOF = Encoding.UTF8.GetBytes(endToken);
+                byte[] paused = Encoding.UTF8.GetBytes((pause.pause.ToString()));
+                Send(handler, typeData);
+                Send(handler, paused);
+                Send(handler, EOF);
+            }
+        }
     }
 
     public void SendFrame(Socket handler)
@@ -317,6 +303,26 @@ public class AsynchronousSocketListener : MonoBehaviour
             {
                 Type = "Reward";
                 Value = null;
+            }
+            else if (data.StartsWith("Score"))
+            {
+                Type = "Score";
+                Value = null;
+            }
+            else if (data.StartsWith("EpisodeEnd"))
+            {
+                Type = "EpisodeEnd";
+                Value = null;
+            }
+            else if (data.StartsWith("Pause"))
+            {
+                Type = "Pause";
+                Value = data.Replace("Pause", "").Replace(AsynchronousSocketListener.endToken, "").Trim();
+            }
+            else if (data.StartsWith("Rotate"))
+            {
+                Type = "Rotate";
+                Value = data.Replace("Rotate", "").Replace(AsynchronousSocketListener.endToken, "").Trim();
             }
         }
 
@@ -412,8 +418,17 @@ public class AsynchronousSocketListener : MonoBehaviour
     private bool firstUpdate = true;
     public enum State { Waiting, Reset, Connected };
     private State currentState;
+
     void Update()
-    { 
+    {
+        /**if (CollisionEventTrigger != null)
+        {
+            Debug.Log(CollisionEventTrigger.collisionReward.ToString());
+        }
+        if (pause != null)
+        {
+            Debug.Log(pause.pause.ToString());
+        }**/
         // Bind the socket to the local endpoint and listen for incoming connections.  
         try
         {

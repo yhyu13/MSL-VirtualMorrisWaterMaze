@@ -18,6 +18,7 @@ public class TrialConfigurationLoader : MonoBehaviour {
     public GameObject elevator;
     public GameObject flags;
     public GameObject hills;
+    public PauseScreen pauseScreen;
     public TrialTimer timer;
 
     // Use this for initialization
@@ -81,7 +82,11 @@ public class TrialConfigurationLoader : MonoBehaviour {
         player.GetComponentInChildren<AudioListener>().enabled = c.SoundEffectsEnabled[trial];
 
         player.GetComponent<FirstPersonController>().SetWalkSpeed(c.MovementSpeeds[trial]);
-}
+
+        FindObjectOfType<AsynchronousSocketListener>().FPScontroller = player.GetComponent<FirstPersonController>();
+        FindObjectOfType<AsynchronousSocketListener>().CollisionEventTrigger = platformTrigger.GetComponent<CollisionEventTrigger>();
+        FindObjectOfType<AsynchronousSocketListener>().pause = pauseScreen;
+    }
 
     public Configuration getActiveConfiguration()
     {

@@ -10,7 +10,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     [RequireComponent(typeof (AudioSource))]
     public class FirstPersonController : MonoBehaviour
     {
-        private bool m_humanPlayerMode = true; //false; //change
+        private bool m_humanPlayerMode = false; //false; //change
         private int m_turnDirection; //= 1; //change
         private float m_turnMagnitude; //= 30.0f; //change
         [SerializeField] private bool m_IsWalking;
@@ -91,7 +91,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             else
             {
-                //if humanPlayerMode == false, enable agent control.
+                //if humanPlayerMode == false, then enable agent control.
                 MakeATurn(); //change
             }
 

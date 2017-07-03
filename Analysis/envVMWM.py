@@ -75,7 +75,7 @@ class VMWMGame:
         '''
         self.exe_location = VMWMExe_location
         
-    def set_IP_address(self, IP_address='192.168.56.1'):
+    def set_IP_address(self, IP_address='127.0.0.1'):
         '''
             set IP_address for the TCP client. \
             Enter ipconfig in ./cmd for windows machines or ifconfig in bash for linux machines
@@ -86,9 +86,8 @@ class VMWMGame:
         
     # ------------------------------------------------------------------------------------------------------
     # Helper function for decoding state information
-    def decode_state(self,state_message):
-        raise NotImplementedError
-        return None
+    def decode(self,message):
+        return message.decode('utf-8')
 
     # Helper function for parsing messages
     def parse_message(self,message):
@@ -105,25 +104,29 @@ class VMWMGame:
         elif message[0:len("State")] == bytes("State", 'utf8'):
             # If we receive state information, decode it
             return {'type':"State", 
-                    'value': self.decode_state(message[len("State"):-1])}
+                    'value': self.decode(message[len("State"):])}
         elif message[0:len("Reward")] == bytes("Reward",'utf8'):
             # If we receive
+            #print(self.decode(message[len("Reward"):]))
             return {'type':"Reward", 
-                    'value': float(message[len("State"):-1])}
+                    'value': float(self.decode(message[len("Reward"):]))}
         elif message[0:len("Score")] == bytes("Score",'utf8'):
             # If we receive
             return {'type':"Score", 
-                    'value': float(message[len("Score"):-1])}
+                    'value': float(self.decode(message[len("Score"):]))}
         elif message[0:len("EpisodeEnd")] == bytes("EpisodeEnd",'utf8'):
             # If we receive
+            #print(self.decode(message[len("EpisodeEnd"):]))
             return {'type':"EpisodeEnd", 
-                    'value': message[len("EpisodeEnd"):-1]}
+                    'value': self.decode(message[len("EpisodeEnd"):])}
         else:
             # Default messages are returned as-is (with type as None and value as message)
             return {'type': None, 
                     'value': message}
         
-    def start(self,grayScale=True,humanPlayer=False):
+    # Below are methods talk between env and client
+    #-----------------------------------------------------------------------------------------------------    
+    def start(self,grayScale=True):
         '''
             start a game environment.
             params:
@@ -141,7 +144,7 @@ class VMWMGame:
         time.sleep(10) 
         #-----------------------------------------------------------------------------------------------------
         # TCP Socket Parameters
-        TCP_IP = self.IP_address # 192.168.56.1 for windows machine
+        TCP_IP = self.IP_address
         TCP_PORT = 5005
         # End Message Token
         END_TOKEN = "<EOF>"
@@ -151,8 +154,8 @@ class VMWMGame:
         s.connect((TCP_IP, TCP_PORT))
         s.setblocking(0)
         print('connection established')
-        s.send(bytes("HumanPlayerModefalse" + END_TOKEN, 'utf8'))
         self.s = s
+        self.time_out = 100
         # Confirm exit
         print('Done')
         #--------------------------------------------------------------------------------------------------
@@ -180,10 +183,10 @@ class VMWMGame:
         '''
         END_TOKEN = "<EOF>"
         # "Press" Space to continue a another trial
-        self.s.send(bytes("PuaseSpace" + END_TOKEN, 'utf8'))
+        self.s.send(bytes("PauseSpace" + END_TOKEN, 'utf8'))
         
         
-    def get_screeImage(self):
+    def get_screenImage(self):
         '''
             return status:
                     image
@@ -199,7 +202,9 @@ class VMWMGame:
         
         self.s.send(bytes("ImageRequest" + END_TOKEN, 'utf8'))
         
-        while True:
+        start = time.time()
+        end = time.time()
+        while (end-start)<self.time_out:
             # Wait for data and store in buffer
             ready = select.select([self.s], [], [], 0)
             if ready[0]:
@@ -218,8 +223,8 @@ class VMWMGame:
                         if parsed_message['type'] == 'Image':
                             # return ScreenImage
                             return parsed_message['value']
-                        else:
-                            print("Doesn't read image as input")
+            end = time.time()
+        print("Doesn't read image as input.")
                             
     def is_episode_finished(self):
         '''
@@ -232,9 +237,12 @@ class VMWMGame:
         END_TOKEN = "<EOF>"
         
         self.s.send(bytes("EpisodeEnd" + END_TOKEN, 'utf8'))
-        while True:
+        
+        start = time.time()
+        end = time.time()
+        while (end-start)<self.time_out:
             # Wait for data and store in buffer
-            ready = select.select([self.s], [], [], 0)
+            ready = select.select([self.s], [], [],0)
             if ready[0]:
                 try:
                     data += self.s.recv(BUFFER_SIZE)
@@ -254,13 +262,12 @@ class VMWMGame:
                                 return True
                             else:
                                 return False
-                        else:
-                            print("Doesn't read paused as input")
+            end = time.time()
+        print("Doesn't read episode info.")
         
     def make_action(self,direc,magni):
         '''
-            TO DO:
-                return message as "Key122.5" for example.
+           set message as "Rotate122.5" for example.
         '''
         direc = str(direc)
         magni = str(magni)
@@ -268,10 +275,10 @@ class VMWMGame:
         # End Message Token
         END_TOKEN = "<EOF>"
         
-        if np.random.rand < 0.7:
-            self.s.send(bytes("Key150.0" + END_TOKEN, 'utf8'))
+        if np.random.rand() < 0.7:
+            self.s.send(bytes("Rotate250" + END_TOKEN, 'utf8'))
         else:
-            self.s.send(bytes("Key050.0" + END_TOKEN, 'utf8'))
+            self.s.send(bytes("Rotate050" + END_TOKEN, 'utf8'))
     
     
     def get_reward(self):
@@ -285,7 +292,9 @@ class VMWMGame:
         END_TOKEN = "<EOF>"
         self.s.send(bytes("Reward" + END_TOKEN, 'utf8'))
         
-        while True:
+        start = time.time()
+        end = time.time()
+        while (end-start)<self.time_out:
             # Wait for data and store in buffer
             ready = select.select([self.s], [], [], 0)
             if ready[0]:
@@ -301,12 +310,11 @@ class VMWMGame:
                     idx = data.index(bytes(END_TOKEN, 'utf8'))
                     while idx != -1:
                         parsed_message = self.parse_message(message=data[0:idx])
-
                         if parsed_message['type'] == 'Reward':
                             # return ScreenImage
                             return parsed_message['value']
-                        else:
-                            print("Doesn't read reward as input")
+            end = time.time()
+        print("Doesn't read reward.")
         
     def get_score(self):
         '''
@@ -319,7 +327,9 @@ class VMWMGame:
         END_TOKEN = "<EOF>"
         self.s.send(bytes("Score" + END_TOKEN, 'utf8'))
         
-        while True:
+        start = time.time()
+        end = time.time()
+        while (end-start)<self.time_out:
             # Wait for data and store in buffer
             ready = select.select([self.s], [], [], 0)
             if ready[0]:
@@ -335,9 +345,8 @@ class VMWMGame:
                     idx = data.index(bytes(END_TOKEN, 'utf8'))
                     while idx != -1:
                         parsed_message = self.parse_message(message=data[0:idx])
-
                         if parsed_message['type'] == 'Score':
                             # return ScreenImage
                             return parsed_message['value']
-                        else:
-                            print("Doesn't read score as input")
+            end = time.time()
+        print("Doesn't read score.")
