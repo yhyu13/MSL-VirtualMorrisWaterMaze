@@ -11,4 +11,6 @@ This repository contains the Unity project for the Memory Systems Lab version of
 
 2. Environment encapsulation completed.
 
+(A single instance Unity program shows in the center of the image below; The image input the agent will receive is transfered into gray scale and shows in the bottom-right corner)
+
 ![change_July3_Success.PNG](http://upload-images.jianshu.io/upload_images/1873837-ae9a1fbc5051a946.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
