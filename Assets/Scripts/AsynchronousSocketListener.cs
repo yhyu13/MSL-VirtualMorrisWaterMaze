@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using UnityStandardAssets.Characters.FirstPerson;
 using WindowsInput;
 
@@ -26,6 +27,7 @@ public class StateObject
 public class AsynchronousSocketListener : MonoBehaviour
 {
     //public BoxCollider rewardTrigger;
+    private Configuration config; // change july 11
     public FirstPersonController FPScontroller;
     public CollisionEventTrigger CollisionEventTrigger;
     public PauseScreen pause;
@@ -52,11 +54,17 @@ public class AsynchronousSocketListener : MonoBehaviour
 
     public void StartListening()
     {
+
+        if (PlayerPrefs.HasKey("configuration"))
+            config = Configuration.Deserialize(PlayerPrefs.GetString("configuration"));
+            port = config.Port;
+        Text debugText = GameObject.Find("PortText").GetComponent<Text>();
+        
         // Establish the local endpoint for the socket.  
         // The DNS name of the computer  
         // running the listener is "host.contoso.com".  
         IPAddress ipAddress = Dns.GetHostEntry("localhost").AddressList[0];
-        Debug.Log(ipAddress.ToString());
+        //Debug.Log(ipAddress.ToString());
         localEndPoint = new IPEndPoint(ipAddress, port);
         
         // Create a TCP/IP socket.  
@@ -73,6 +81,7 @@ public class AsynchronousSocketListener : MonoBehaviour
         {
             //Debug.Log(e.ToString());
         }
+        debugText.text = "Port:" + config.Port;
     }
 
     public void AcceptCallback(IAsyncResult ar)

@@ -16,11 +16,13 @@ import numpy as np
 from subprocess import Popen
 
 class VMWMGame:
-    def __init__(self, config_original_txt_location):
+    def __init__(self, config_original_txt_location, VMWMExe_location):
         '''
             initialization & set the path of the original configuraiton text
+            set unity program location (.exe)
         '''
         self.cfg_txt = config_original_txt_location
+        self.exe_location = VMWMExe_location
         
     def reset_cfg(self):
         '''
@@ -39,7 +41,8 @@ class VMWMGame:
         if os.path.isfile(base + ".ini"):
             os.remove(base + ".ini")
         # rename .txt to .ini
-        os.rename(thisFile2, base + ".ini")
+        self.cfg_ini = base + ".ini"
+        os.rename(thisFile2, self.cfg_ini)
         
     def set_trial(self, trial_name):
         '''
@@ -47,41 +50,35 @@ class VMWMGame:
         '''
         self.trial_name = "PlayerPrefsStrial," + trial_name
         
-    def set_parameters(self,parameters):
+    def set_parameters(self,parameters = ['Port=5005', 'Port=5004']):
         '''
             modify the new configuration file (.ini version) according to our setting and save it
         '''
+        original = parameters[0]
+        modified = parameters[1]
         
-        # ONGOING
+        # Open configuration.ini
+        with open(self.cfg_ini, 'r') as file :
+          filedata = file.read()
+        # Replace the target string
+        filedata = filedata.replace(original, modified)
+        '''idx = filedata.index('Port=')
+        idx_end = -1
+        for i in range(idx, len(filedata)):
+            if filedata[]
+            '''
+        # Write the file out again
+        with open(self.cfg_ini, 'w') as file:
+          file.write(filedata)
         
-        # TO DO: define all parameters and define corresponding 'if statement'
-        ''' 
-        import os
-        os.rename( afile, afile+"~" )
-
-        destination= open( aFile, "w" )
-        source= open( aFile+"~", "r" )
-        for line in source:
-            destination.write( line )
-            if <some condition>:
-                destination.write( >some additional line> + "\n" )
-        source.close()
-        destination.close()
-        '''
-        
-    def set_exe_location(self,VMWMExe_location):
-        '''
-            set unity program location (.exe)
-        '''
-        self.exe_location = VMWMExe_location
-        
-    def set_IP_address(self, IP_address='127.0.0.1'):
+    def set_local_host(self, IP_address='127.0.0.1',Port=5005):
         '''
             set IP_address for the TCP client. \
             Enter ipconfig in ./cmd for windows machines or ifconfig in bash for linux machines
             to get the local IP address for the unity program. Usually, it is either 192.168.xxx.xxx or 10.xx.xx.xx
         '''
         self.IP_address = IP_address
+        self.Port = Port
         
         
     # ------------------------------------------------------------------------------------------------------
@@ -126,38 +123,45 @@ class VMWMGame:
         
     # Below are methods talk between env and client
     #-----------------------------------------------------------------------------------------------------    
-    def start(self,grayScale=True):
+    def start(self,grayScale=True,):
         '''
             start a game environment.
             params:
                 IP_address: the local TCP/IP of the unity game window. Windows->ipconfig, Linux/Mac->ifconfig
                 trial_name: the name of the experiment
         '''
+        # Step 1. set grayScale (boolean)
         self.grayScale = grayScale
-        # Part 1 TO DO: open the VMWM.exe
+        print('Port being used: {}'.format(self.Port))
+        
+        # Step 2. set Port by using set_parameters()
+        self.set_parameters(parameters=['Port=5005','Port='+str(self.Port)])
+        
         try:
             Popen(self.exe_location)
         except:
             print('Error: cannot start an environment.')
-        # 6 seconds delay to make sure the program is fully set up
-        print('Sleep for 10s to ensure fully load up.')
-        time.sleep(10) 
+        
+        # Step 3. 8 seconds delay to make sure the program is fully set up
+        time.sleep(8) 
         #-----------------------------------------------------------------------------------------------------
-        # TCP Socket Parameters
+        # Step 4. TCP Socket Parameters
         TCP_IP = self.IP_address
-        TCP_PORT = 5005
+        TCP_PORT = self.Port
         # End Message Token
         END_TOKEN = "<EOF>"
-        print('connection start')
-        # Set up Socket
+        
+        #print('connection start')
+        # Step 5. Set up Socket
+        print('local host--{}:{}'.format(TCP_IP,TCP_PORT))
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((TCP_IP, TCP_PORT))
         s.setblocking(0)
-        print('connection established')
+        #print('connection established')
         self.s = s
         self.time_out = 100
-        # Confirm exit
-        print('Done')
+        # Step 6. call reset_cfg() to make sure 'Port 5005' remains intact so that the next agent is able to call Step 2 successfully
+        self.reset_cfg()
         #--------------------------------------------------------------------------------------------------
                                                                                  
     def start_trial(self):
@@ -256,6 +260,7 @@ class VMWMGame:
                     idx = data.index(bytes(END_TOKEN, 'utf8'))
                     while idx != -1:
                         parsed_message = self.parse_message(message=data[0:idx])
+                        
                         if parsed_message['type'] == 'EpisodeEnd':
                             # return ScreenImage
                             if parsed_message['value'] == 'True':
