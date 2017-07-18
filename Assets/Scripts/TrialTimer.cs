@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 public class TrialTimer : MonoBehaviour {
     public TrialConfigurationLoader configLoader;
     public PauseScreen pause;
-    private float startTime;
+    public float startTime;
     private float pauseTime;
     private float prevTime;
     public float trialTime;

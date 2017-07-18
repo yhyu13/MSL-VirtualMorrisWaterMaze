@@ -123,7 +123,7 @@ class VMWMGame:
         
     # Below are methods talk between env and client
     #-----------------------------------------------------------------------------------------------------    
-    def start(self,grayScale=True,):
+    def start(self,grayScale=True,setting=0):
         '''
             start a game environment.
             params:
@@ -138,7 +138,22 @@ class VMWMGame:
         self.set_parameters(parameters=['Port=5005','Port='+str(self.Port)])
         
         try:
-            Popen(self.exe_location)
+            if setting == 1:
+                # setting ==1 => minize window
+                SW_MINIMIZE = 6
+                info = subprocess.STARTUPINFO()
+                info.dwFlags = subprocess.STARTF_USESHOWWINDOW
+                info.wShowWindow = SW_MINIMIZE
+                Popen(self.exe_location,startupinfo=info)
+            elif setting == 2:
+                # setting ==2 => run in hidden
+                SW_HIDE = 0
+                info = subprocess.STARTUPINFO()
+                info.dwFlags = subprocess.STARTF_USESHOWWINDOW
+                info.wShowWindow = SW_HIDE
+                Popen(self.exe_location,startupinfo=info)
+            else:
+                Popen(self.exe_location)
         except:
             print('Error: cannot start an environment.')
         
@@ -279,11 +294,7 @@ class VMWMGame:
         
         # End Message Token
         END_TOKEN = "<EOF>"
-        
-        if np.random.rand() < 0.7:
-            self.s.send(bytes("Rotate250" + END_TOKEN, 'utf8'))
-        else:
-            self.s.send(bytes("Rotate050" + END_TOKEN, 'utf8'))
+        self.s.send(bytes("Rotate"+direc+magni + END_TOKEN, 'utf8'))
     
     
     def get_reward(self):

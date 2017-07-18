@@ -52,6 +52,7 @@ public class TrialConfigurationLoader : MonoBehaviour {
         int numberOfExecutions = c.NumberOfExecutions[trial];
         //Debug.Log(iteration);
         //Debug.Log(numberOfExecutions);
+        
         if (iteration >= numberOfExecutions)
         {
             PlayerPrefs.SetInt("iteration", 0);
@@ -78,7 +79,6 @@ public class TrialConfigurationLoader : MonoBehaviour {
 
         timer.trialTime = c.TrialTimeLimits[trial];
         binaryLogger.numberOfExecutionsForThisTrial = numberOfExecutions; // change
-
         player.GetComponentInChildren<AudioListener>().enabled = c.SoundEffectsEnabled[trial];
 
         player.GetComponent<FirstPersonController>().SetWalkSpeed(c.MovementSpeeds[trial]);

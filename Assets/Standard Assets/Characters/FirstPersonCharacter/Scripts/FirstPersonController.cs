@@ -13,6 +13,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private bool m_humanPlayerMode = false; //false; //change
         private int m_turnDirection; //= 1; //change
         private float m_turnMagnitude; //= 30.0f; //change
+        public float penalty_reward = 0f; //change
+        public float penalty_score = 0f; //change
+        private float startTime;
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
         [SerializeField] private float m_RunSpeed;
@@ -79,6 +82,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_Jumping = false;
             m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
+            startTime = Time.time; //change
         }
 
 
@@ -136,7 +140,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // always move along the camera forward as it is the direction that it being aimed at
             m_MoveDir = transform.rotation * Vector3.forward * speed * Time.deltaTime * 50;
-
+            bool reachBoundary = Vector3.Distance(Vector3.zero, transform.position) > 18;
+            if (reachBoundary)
+            {
+                float currentTime = Time.time;
+                penalty_reward = -2.0f * (currentTime - startTime);
+                penalty_score -= 2.0f * (currentTime - startTime);
+            }
+            else
+            {
+                penalty_reward = 0f;
+            }
+            //Debug.Log(reachBoundary);
             if (m_CharacterController.isGrounded)
             {
                 m_MoveDir.y = -m_StickToGroundForce;

@@ -31,6 +31,7 @@ public class AsynchronousSocketListener : MonoBehaviour
     public FirstPersonController FPScontroller;
     public CollisionEventTrigger CollisionEventTrigger;
     public PauseScreen pause;
+    public BinaryLogger BinaryLogger;
 
     public static bool instanceExists = false;
 
@@ -209,7 +210,7 @@ public class AsynchronousSocketListener : MonoBehaviour
             {
                 byte[] typeData = Encoding.UTF8.GetBytes("Reward");
                 byte[] EOF = Encoding.UTF8.GetBytes(endToken);
-                byte[] reward = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionReward).ToString());
+                byte[] reward = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionReward + FPScontroller.penalty_reward).ToString());
                 Send(handler, typeData);
                 Send(handler, reward);
                 Send(handler, EOF);
@@ -221,7 +222,7 @@ public class AsynchronousSocketListener : MonoBehaviour
             {
                 byte[] typeData = Encoding.UTF8.GetBytes("Score");
                 byte[] EOF = Encoding.UTF8.GetBytes(endToken);
-                byte[] score = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionScore).ToString());
+                byte[] score = Encoding.UTF8.GetBytes((CollisionEventTrigger.collisionScore + FPScontroller.penalty_score).ToString());
                 Send(handler, typeData);
                 Send(handler, score);
                 Send(handler, EOF);
@@ -430,14 +431,17 @@ public class AsynchronousSocketListener : MonoBehaviour
 
     void Update()
     {
-        /**if (CollisionEventTrigger != null)
+        /*
+        if (CollisionEventTrigger != null)
         {
-            Debug.Log(CollisionEventTrigger.collisionReward.ToString());
+            Debug.Log((CollisionEventTrigger.collisionReward +FPScontroller.penalty_reward).ToString());
         }
+        /*
         if (pause != null)
         {
             Debug.Log(pause.pause.ToString());
-        }**/
+        }
+        */
         // Bind the socket to the local endpoint and listen for incoming connections.  
         try
         {

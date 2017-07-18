@@ -9,27 +9,33 @@ public class CollisionEventTrigger : MonoBehaviour {
     public bool triggerOnCollisionEnter = true;
     public bool triggerOnTriggerEnter = true;
     public CollisionEventTriggerType eventType = CollisionEventTriggerType.Start;
-    public int collisionScore = 0;
-    public int collisionReward = 0;
+    public float collisionScore = 0;
+    public float collisionReward = 0;
 
     void OnCollisionEnter(Collision c)
     {
         Debug.Log("OnCollisionEnter");
-        if(triggerOnCollisionEnter)
+        if (triggerOnCollisionEnter)
+        {
+            float startTime = FindObjectOfType<TrialTimer>().startTime;
+            float currentTime = Time.time;
             BeginNamedTweens(c.collider, targetObject, tweenEventName, eventType);
-            collisionScore += 50;
-            collisionReward += 50;
-        collisionReward = 0;
+            collisionScore += 50 * (15 - (currentTime - startTime)); // the more time elpased, the less the score.
+            collisionReward += 50 * (15 - (currentTime - startTime));
+        }
     }
 
     void OnTriggerEnter(Collider c)
     {
         Debug.Log("OnTriggerEnter");
         if (triggerOnTriggerEnter)
+        {
+            float startTime = FindObjectOfType<TrialTimer>().startTime;
+            float currentTime = Time.time;
             BeginNamedTweens(c, targetObject, tweenEventName, eventType);
-            collisionScore += 50;
-            collisionReward += 50;
-        collisionReward = 0;
+            collisionScore += 50 * (15 - (currentTime - startTime));
+            collisionReward += 50 * (15 - (currentTime - startTime));
+        }
     }
 
     static void BeginNamedTweens(Collider source, GameObject target, string name, CollisionEventTriggerType type)

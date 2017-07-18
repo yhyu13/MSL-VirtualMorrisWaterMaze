@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public class BinaryLogger : MonoBehaviour {
 
-    private bool doRecord;
+    public bool doRecord;
 
     public TrialConfigurationLoader configLoader; // change
     public int numberOfExecutionsForThisTrial; // change
@@ -50,15 +50,11 @@ public class BinaryLogger : MonoBehaviour {
         DateTime time = DateTime.Now;
         string timeString = time.ToString(dateTimeFormat);
         filename = filename.Replace("<datetime>", timeString);
-		
-	    doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
-        if (!doRecord) // change
-        {
-            return;
-        }
 
         // doRecord is a boolean which indicate whether or not to record this trial
         doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
+        doRecord = (iterations == 0) ? false : doRecord;
+
         if (!doRecord) // change
         {
             return;
