@@ -286,6 +286,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             //change
             // direction = -1 means turning left, direction = 1 means turning right, direction = 0 means going straight.
+
+            /*float random = Random.Range(0f, 1f);
+            if (random > 0.5f)
+            {
+                transform.Rotate(0, Time.deltaTime * 1 * m_turnMagnitude, 0, Space.Self);
+            }
+            else if (random < 0.5f && random > 0.1f)
+            {
+                transform.Rotate(0, Time.deltaTime * -1 * m_turnMagnitude, 0, Space.Self);
+            }
+            else
+            {
+                transform.Rotate(0, Time.deltaTime * 0 * m_turnMagnitude, 0, Space.Self);
+            }*/
             transform.Rotate(0, Time.deltaTime * m_turnDirection * m_turnMagnitude, 0, Space.Self);
         }
 

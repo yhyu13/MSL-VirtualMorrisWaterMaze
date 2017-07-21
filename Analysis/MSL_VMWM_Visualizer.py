@@ -5,7 +5,8 @@ import logging
 # noinspection PyUnresolvedReferences
 import os
 # noinspection PyUnresolvedReferences
-import tkFileDialog
+#import tkFileDialog
+import tkinter.filedialog as tkFileDialog
 # noinspection PyUnresolvedReferences
 import numpy as np
 # noinspection PyUnresolvedReferences

@@ -22,11 +22,12 @@ def get_filename_meta_data(fn):
 def trial_num_to_str(trial):
     names = ['Test Trial', 'Practice - Flags', 'Practice - Hills', 'Practice - Visible Platform', 'Trial 1',
              'Trial 2-5', 'Trial 6-10', 'Trial 11-15', 'Probe Trial']
-    lookup = trial
+    #print(trial)
+    lookup = int(trial)
     # noinspection PyTypeChecker
-    if isinstance(lookup, basestring):
-        lookup = int(lookup)
-    return names[lookup]
+    #if isinstance(lookup, basestring):
+    #    lookup = int(lookup)
+    return names[0]
 
 
 # From http://stackoverflow.com/questions/1550560/encoding-an-integer-in-7-bit-format-of-c-sharp-binaryreader-readstring
@@ -62,12 +63,12 @@ def read_binary_file(path):
     with open(path, 'rb') as f:
         header_length = decode_7bit_int_length(f)
         header = f.read(header_length)
-        split_header = header.split(',')
+        split_header = header.split(b',')
 
         version_number = split_header[1]
 
-        num_keys = header.count('key')
-        num_buttons = header.count('button')
+        num_keys = header.count(b'key')
+        num_buttons = header.count(b'button')
 
         while f.read(1):  # Look ahead for end of file
             f.seek(-1, 1)  # Go back one to undo the look-ahead
