@@ -157,8 +157,8 @@ class VMWMGame:
         except:
             print('Error: cannot start an environment.')
         
-        # Step 3. 8 seconds delay to make sure the program is fully set up
-        time.sleep(8) 
+        # Step 3. 7 seconds delay to make sure the program is fully set up
+        time.sleep(7) 
         #-----------------------------------------------------------------------------------------------------
         # Step 4. TCP Socket Parameters
         TCP_IP = self.IP_address
@@ -174,6 +174,7 @@ class VMWMGame:
         s.setblocking(0)
         #print('connection established')
         self.s = s
+		# set a time out limit == 100ms
         self.time_out = 100
         # Step 6. call reset_cfg() to make sure 'Port 5005' remains intact so that the next agent is able to call Step 2 successfully
         self.reset_cfg()
@@ -287,7 +288,10 @@ class VMWMGame:
         
     def make_action(self,direc,magni):
         '''
-           set message as "Rotate122.5" for example.
+           set message as "Rotate"+"1"+"22.5" for example.
+		   "1"=stay course
+		   "2"=turn right
+		   "0"=turn left
         '''
         direc = str(direc)
         magni = str(magni)

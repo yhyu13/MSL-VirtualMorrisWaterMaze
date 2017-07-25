@@ -20,8 +20,8 @@ public class CollisionEventTrigger : MonoBehaviour {
             float startTime = FindObjectOfType<TrialTimer>().startTime;
             float currentTime = Time.time;
             BeginNamedTweens(c.collider, targetObject, tweenEventName, eventType);
-            collisionScore += 50 * (15 - (currentTime - startTime)); // the more time elpased, the less the score.
-            collisionReward += 50 * (15 - (currentTime - startTime));
+            collisionScore += 100 * Mathf.Exp((15 - (currentTime - startTime))/2); // the more time elpased, the less the score.
+            collisionReward += 100 * Mathf.Exp((15 - (currentTime - startTime))/2);
         }
     }
 

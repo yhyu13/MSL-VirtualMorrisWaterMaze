@@ -144,8 +144,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (reachBoundary)
             {
                 float currentTime = Time.time;
-                penalty_reward = -2.0f * (currentTime - startTime);
-                penalty_score -= 2.0f * (currentTime - startTime);
+                penalty_reward = -5.0f * (currentTime - startTime);
+                penalty_score -= 5.0f * (currentTime - startTime);
             }
             else
             {

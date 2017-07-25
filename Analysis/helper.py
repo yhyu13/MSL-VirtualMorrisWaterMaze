@@ -7,6 +7,64 @@ import os
 import csv
 import itertools
 import tensorflow.contrib.slim as slim
+import cv2
+
+# Helper Function------------------------------------------------------------------------------------------------------------
+# Copies one set of variables to another.
+# Used to set worker network parameters to those of global network.
+def update_target_graph(from_scope,to_scope):
+    from_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, from_scope)
+    to_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, to_scope)
+
+    op_holder = []
+    for from_var,to_var in zip(from_vars,to_vars):
+        op_holder.append(to_var.assign(from_var))
+    return op_holder
+    
+def process_salient_object(s):
+    #print(s.shape())
+    s = scipy.misc.imresize(s,[200,320])
+    s = s / np.max(s)
+    mask = s>(0.+1e-4)
+    #print(s.shape)
+    #print(mask)
+    #print(mask.shape)
+    return mask , np.reshape([[0,i*255,0] for i in s.flatten()],(200,320,3))
+    
+def mask_color_img(img, mask=[], alpha=0.7):
+    '''
+    https://stackoverflow.com/questions/9193603/applying-a-coloured-overlay-to-an-image-in-either-pil-or-imagemagik
+    img: cv2 image
+    mask: bool or np.where
+    color: BGR triplet [_, _, _]. Default: [0, 255, 255] is yellow.
+    alpha: float [0, 1]. 
+
+    Ref: http://www.pyimagesearch.com/2016/03/07/transparent-overlays-with-opencv/
+    '''
+    out = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    img_layer = out.copy()
+    img_layer[mask[0]] = mask[1][mask[0]]
+    out = cv2.addWeighted(img_layer, alpha, out, 1 - alpha, 0, out)
+    return out
+
+# Processes Doom screen image to produce cropped and resized image. 
+def process_frame(s):
+    #s = frame[10:-10,30:-30]
+    s = scipy.misc.imresize(s,[84,84])
+    s = np.reshape(s,[np.prod(s.shape)]) / 255.0
+    return s
+
+# Discounting function used to calculate discounted returns.
+def discount(x, gamma):
+    return scipy.signal.lfilter([1], [1, -gamma], x[::-1], axis=0)[::-1]
+
+#Used to initialize weights for policy and value output layers
+def normalized_columns_initializer(std=1.0):
+    def _initializer(shape, dtype=None, partition_info=None):
+        out = np.random.randn(*shape).astype(np.float32)
+        out *= std / np.sqrt(np.square(out).sum(axis=0, keepdims=True))
+        return tf.constant(out)
+    return _initializer
 
 #This is a simple function to reshape our game frames.
 def processState(state1):
