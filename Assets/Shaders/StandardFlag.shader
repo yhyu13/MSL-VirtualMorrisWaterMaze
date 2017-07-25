@@ -34,6 +34,7 @@
 			v2f vert(appdata_base v)
 			{
 				v2f o;
+				UNITY_INITIALIZE_OUTPUT(v2f, o);
 				v.vertex.y += cos((v.vertex.x + _Time.y * _Speed) * _Frequency) * _Amplitude * (v.vertex.x - 5);
 				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 				o.uv = TRANSFORM_TEX(v.texcoord, _MainTex);

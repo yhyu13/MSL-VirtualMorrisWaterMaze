@@ -48,6 +48,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private bool m_Jumping;
         private AudioSource m_AudioSource;
 
+        public bool backwardMovementEnabled;
+        public bool mouseRotationEnabled = false;
         public void DisableWalking()
         {
             m_WalkSpeed = 0f;
@@ -137,6 +139,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             RaycastHit hitInfo;
             Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
                                m_CharacterController.height/2f, ~0, QueryTriggerInteraction.Ignore);
+<<<<<<< HEAD
 
             // always move along the camera forward as it is the direction that it being aimed at
             m_MoveDir = transform.rotation * Vector3.forward * speed * Time.deltaTime * 50;
@@ -152,6 +155,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 penalty_reward = 0f;
             }
             //Debug.Log(reachBoundary);
+=======
+            desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
+
+            m_MoveDir.z = desiredMove.z * speed;
+                
+>>>>>>> refs/remotes/kevroy314/master
             if (m_CharacterController.isGrounded)
             {
                 m_MoveDir.y = -m_StickToGroundForce;
@@ -249,6 +258,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // Read input
             float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
             float vertical = CrossPlatformInputManager.GetAxis("Vertical");
+            if (!backwardMovementEnabled)
+                vertical = Mathf.Clamp(vertical, 0, float.MaxValue);
 
             bool waswalking = m_IsWalking;
 
@@ -279,7 +290,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void RotateView()
         {
-            m_MouseLook.LookRotation (transform, m_Camera.transform);
+            if (mouseRotationEnabled)
+                m_MouseLook.LookRotation(transform, m_Camera.transform);
         }
 
         public void MakeATurn() 

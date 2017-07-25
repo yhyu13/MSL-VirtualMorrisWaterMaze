@@ -3,6 +3,7 @@ using System.Collections;
 using System;
 using System.Xml.Serialization;
 using System.IO;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class Configuration : System.Object {
@@ -63,6 +64,20 @@ public class Configuration : System.Object {
             port = parser.ReadValue("Global", "Port", 5005);
             frameMode = parser.ReadValue("Global", "FrameMode", 1);
 
+            //RandomSamplePositions
+            string samplePosStr = parser.ReadValue("Global", "RandomSamplePoints", "");
+            List<Vector2> randomPositions = new List<Vector2>();
+            string[] splt = samplePosStr.Split(new char[] { ',' });
+            for (int i = 0; i < splt.Length - 1; i += 2)
+                randomPositions.Add(new Vector2(float.Parse(splt[i]), float.Parse(splt[i + 1])));
+
+            //RandomSampleOrientations
+            List<Quaternion> randomOrientations = new List<Quaternion>();
+            string sampleOriStr = parser.ReadValue("Global", "RandomSampleOrientations", "");
+            string [] splt2 = sampleOriStr.Split(new char[] { ',' });
+            for (int i = 0; i < splt2.Length; i++)
+                randomOrientations.Add(Quaternion.Euler(0f, float.Parse(splt2[i]), 0f));
+
             //Popualte the data arrays with defaults
             int n = TrialStrings.Length;
 
@@ -71,6 +86,21 @@ public class Configuration : System.Object {
             //Iterate through the sections
             for(int i = 0; i < TrialStrings.Length; i++) {
                 string trialString = TrialStrings[i];
+
+                bool startNewRandomSample = parser.ReadValue(trialString, "StartNewRandomSample", 0) != 0;
+                string randomSampleIdx = parser.ReadValue(trialString, "RandomSampleIndex", "");
+                int[] randomSampleIndices;
+                if (randomSampleIdx != "")
+                {
+                    string[] rsplit = randomSampleIdx.Split(new char[] { ',' });
+                    randomSampleIndices = new int[rsplit.Length];
+                    for (int j = 0; j < rsplit.Length; j++)
+                        randomSampleIndices[j] = int.Parse(rsplit[j]);
+                }
+                else
+                {
+                    randomSampleIndices = new int[0];
+                }
 
                 //Get the number of executions to look for values for
                 NumberOfExecutions[i] = parser.ReadValue(trialString, "NumberOfExecutions", 1);
@@ -107,6 +137,15 @@ public class Configuration : System.Object {
                         if (j < NumberOfExecutions[i] * 2)
                             playerStartPositions[i][j / 2] = ParseVector2(split[j] + ',' + split[j + 1]);
                 }
+                else
+                {
+                    //Sample from playerprefs and randomsaplepoints
+                    int perm = getSamplePlayerPrefsPerm(startNewRandomSample);
+                    int[] idxs = permutation5(perm);
+                    for (int j = 0; j < NumberOfExecutions[i]; j++)
+                        if (j < NumberOfExecutions[i] && j < randomSampleIndices.Length)
+                            playerStartPositions[i][j] = randomPositions[idxs[randomSampleIndices[j]]];
+                }
 
                 //Populate the player starting orientation if specified
                 string orientationStr = parser.ReadValue(trialString, "PlayerStartOrientationRadians", "");
@@ -123,6 +162,15 @@ public class Configuration : System.Object {
                             }
                             catch (Exception) { }
                         }
+                }
+                else
+                {
+                    //Sample from playerprefs and randomsampleorientations
+                    int perm = getSamplePlayerPrefsPerm(false);
+                    int[] idxs = permutation5(perm);
+                    for (int j = 0; j < NumberOfExecutions[i]; j++)
+                        if (j < NumberOfExecutions[i] && j < randomSampleIndices.Length)
+                            playerStartOrientations[i][j] = randomOrientations[idxs[randomSampleIndices[j]]];
                 }
 
                 //Read the timeout (float.PositiveInfinity is default)
@@ -434,5 +482,27 @@ public class Configuration : System.Object {
         {
             frameMode = value;
         }
+    }
+
+    public int getSamplePlayerPrefsPerm(bool advance)
+    {
+        if (!PlayerPrefs.HasKey("sample_perm"))
+            PlayerPrefs.SetInt("sample_perm", 0);
+        else if (advance)
+            PlayerPrefs.SetInt("sample_perm", PlayerPrefs.GetInt("sample_perm", 0) + 1);
+
+        return PlayerPrefs.GetInt("sample_perm") % 120; // mod 5 factorial // magic numbers
+    }
+
+    private static int[] permutation5(int idx)
+    {
+        int permNumber = 5; // magic numbers
+        int[] lut = new int[] { 11, 38, 88, 64, 49, 81, 2, 87, 107, 30, 48, 17, 7, 110, 23, 98, 32, 89, 43, 46, 18, 100, 53, 39, 47, 84, 113, 41, 58, 97, 33, 85, 4, 35, 31, 71, 26, 117, 83, 68, 9, 55, 8, 50, 66, 78, 94, 24, 79, 70, 76, 57, 60, 69, 62, 0, 111, 109, 74, 6, 5, 108, 45, 3, 25, 102, 95, 21, 115, 27, 63, 86, 29, 75, 44, 13, 105, 101, 56, 65, 73, 14, 93, 103, 77, 15, 54, 10, 51, 42, 59, 20, 106, 112, 72, 91, 104, 19, 90, 116, 114, 36, 16, 40, 1, 34, 118, 82, 52, 99, 61, 67, 119, 12, 37, 28, 92, 96, 80, 22 };
+        int[,] perms = new int[,] { { 0, 1, 2, 3, 4 }, { 0, 1, 2, 4, 3 }, { 0, 1, 3, 2, 4 }, { 0, 1, 3, 4, 2 }, { 0, 1, 4, 2, 3 }, { 0, 1, 4, 3, 2 }, { 0, 2, 1, 3, 4 }, { 0, 2, 1, 4, 3 }, { 0, 2, 3, 1, 4 }, { 0, 2, 3, 4, 1 }, { 0, 2, 4, 1, 3 }, { 0, 2, 4, 3, 1 }, { 0, 3, 1, 2, 4 }, { 0, 3, 1, 4, 2 }, { 0, 3, 2, 1, 4 }, { 0, 3, 2, 4, 1 }, { 0, 3, 4, 1, 2 }, { 0, 3, 4, 2, 1 }, { 0, 4, 1, 2, 3 }, { 0, 4, 1, 3, 2 }, { 0, 4, 2, 1, 3 }, { 0, 4, 2, 3, 1 }, { 0, 4, 3, 1, 2 }, { 0, 4, 3, 2, 1 }, { 1, 0, 2, 3, 4 }, { 1, 0, 2, 4, 3 }, { 1, 0, 3, 2, 4 }, { 1, 0, 3, 4, 2 }, { 1, 0, 4, 2, 3 }, { 1, 0, 4, 3, 2 }, { 1, 2, 0, 3, 4 }, { 1, 2, 0, 4, 3 }, { 1, 2, 3, 0, 4 }, { 1, 2, 3, 4, 0 }, { 1, 2, 4, 0, 3 }, { 1, 2, 4, 3, 0 }, { 1, 3, 0, 2, 4 }, { 1, 3, 0, 4, 2 }, { 1, 3, 2, 0, 4 }, { 1, 3, 2, 4, 0 }, { 1, 3, 4, 0, 2 }, { 1, 3, 4, 2, 0 }, { 1, 4, 0, 2, 3 }, { 1, 4, 0, 3, 2 }, { 1, 4, 2, 0, 3 }, { 1, 4, 2, 3, 0 }, { 1, 4, 3, 0, 2 }, { 1, 4, 3, 2, 0 }, { 2, 0, 1, 3, 4 }, { 2, 0, 1, 4, 3 }, { 2, 0, 3, 1, 4 }, { 2, 0, 3, 4, 1 }, { 2, 0, 4, 1, 3 }, { 2, 0, 4, 3, 1 }, { 2, 1, 0, 3, 4 }, { 2, 1, 0, 4, 3 }, { 2, 1, 3, 0, 4 }, { 2, 1, 3, 4, 0 }, { 2, 1, 4, 0, 3 }, { 2, 1, 4, 3, 0 }, { 2, 3, 0, 1, 4 }, { 2, 3, 0, 4, 1 }, { 2, 3, 1, 0, 4 }, { 2, 3, 1, 4, 0 }, { 2, 3, 4, 0, 1 }, { 2, 3, 4, 1, 0 }, { 2, 4, 0, 1, 3 }, { 2, 4, 0, 3, 1 }, { 2, 4, 1, 0, 3 }, { 2, 4, 1, 3, 0 }, { 2, 4, 3, 0, 1 }, { 2, 4, 3, 1, 0 }, { 3, 0, 1, 2, 4 }, { 3, 0, 1, 4, 2 }, { 3, 0, 2, 1, 4 }, { 3, 0, 2, 4, 1 }, { 3, 0, 4, 1, 2 }, { 3, 0, 4, 2, 1 }, { 3, 1, 0, 2, 4 }, { 3, 1, 0, 4, 2 }, { 3, 1, 2, 0, 4 }, { 3, 1, 2, 4, 0 }, { 3, 1, 4, 0, 2 }, { 3, 1, 4, 2, 0 }, { 3, 2, 0, 1, 4 }, { 3, 2, 0, 4, 1 }, { 3, 2, 1, 0, 4 }, { 3, 2, 1, 4, 0 }, { 3, 2, 4, 0, 1 }, { 3, 2, 4, 1, 0 }, { 3, 4, 0, 1, 2 }, { 3, 4, 0, 2, 1 }, { 3, 4, 1, 0, 2 }, { 3, 4, 1, 2, 0 }, { 3, 4, 2, 0, 1 }, { 3, 4, 2, 1, 0 }, { 4, 0, 1, 2, 3 }, { 4, 0, 1, 3, 2 }, { 4, 0, 2, 1, 3 }, { 4, 0, 2, 3, 1 }, { 4, 0, 3, 1, 2 }, { 4, 0, 3, 2, 1 }, { 4, 1, 0, 2, 3 }, { 4, 1, 0, 3, 2 }, { 4, 1, 2, 0, 3 }, { 4, 1, 2, 3, 0 }, { 4, 1, 3, 0, 2 }, { 4, 1, 3, 2, 0 }, { 4, 2, 0, 1, 3 }, { 4, 2, 0, 3, 1 }, { 4, 2, 1, 0, 3 }, { 4, 2, 1, 3, 0 }, { 4, 2, 3, 0, 1 }, { 4, 2, 3, 1, 0 }, { 4, 3, 0, 1, 2 }, { 4, 3, 0, 2, 1 }, { 4, 3, 1, 0, 2 }, { 4, 3, 1, 2, 0 }, { 4, 3, 2, 0, 1 }, { 4, 3, 2, 1, 0 } };
+        int[] output = new int[permNumber];
+        int lutIdx = lut[idx];
+        for (int i = 0; i < output.Length; i++)
+            output[i] = perms[lutIdx, i];
+        return output;
     }
 }

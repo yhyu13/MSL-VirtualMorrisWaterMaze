@@ -27,6 +27,8 @@ public class BinaryLogger : MonoBehaviour {
 
     private bool firstUpdate = true;
 
+    public bool logging = true;
+
 	// Use this for initialization
 	void Start () {
         string filename = filenameFormat;
@@ -93,22 +95,25 @@ public class BinaryLogger : MonoBehaviour {
 
             firstUpdate = false;
         }
-        writer.Write(DateTime.Now.ToBinary());
-        writer.Write(Time.time);
-        writer.Write(cam.transform.position.x);
-        writer.Write(cam.transform.position.y);
-        writer.Write(cam.transform.position.z);
-        writer.Write(cam.transform.rotation.x);
-        writer.Write(cam.transform.rotation.y);
-        writer.Write(cam.transform.rotation.z);
-        writer.Write(cam.transform.rotation.w);
-        for(int i = 0; i < keys.Count; i++)
-            writer.Write(Input.GetKey(keys[i]));
-        for (int i = 0; i < buttons.Count; i++)
+        if (logging)
         {
-            bool state = false;
-            try { state = Input.GetButton(buttons[i]); } catch (ArgumentException) { }
-            writer.Write(state);
+            writer.Write(DateTime.Now.ToBinary());
+            writer.Write(Time.time);
+            writer.Write(cam.transform.position.x);
+            writer.Write(cam.transform.position.y);
+            writer.Write(cam.transform.position.z);
+            writer.Write(cam.transform.rotation.x);
+            writer.Write(cam.transform.rotation.y);
+            writer.Write(cam.transform.rotation.z);
+            writer.Write(cam.transform.rotation.w);
+            for (int i = 0; i < keys.Count; i++)
+                writer.Write(Input.GetKey(keys[i]));
+            for (int i = 0; i < buttons.Count; i++)
+            {
+                bool state = false;
+                try { state = Input.GetButton(buttons[i]); } catch (ArgumentException) { }
+                writer.Write(state);
+            }
         }
     }
 

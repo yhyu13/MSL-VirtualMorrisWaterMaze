@@ -13,6 +13,8 @@ public class InputValidator : MonoBehaviour {
     public bool relativePath = true;
     public GameObject tcpServer;
 
+    public static bool exists = false;
+
     void Start()
     {
         if (PlayerPrefs.HasKey("subid"))
@@ -20,7 +22,17 @@ public class InputValidator : MonoBehaviour {
         if (PlayerPrefs.HasKey("trial"))
             trialDropdown.value = PlayerPrefs.GetInt("trial");
         PlayerPrefs.SetInt("iteration", 0);
-        Configuration config = LoadConfiguration();
+        ConfigurationStateClearer state = FindObjectOfType<ConfigurationStateClearer>();
+        Configuration config;
+        if (state.firstLoad)
+        {
+            config = LoadConfiguration();
+            state.firstLoad = false;
+        }
+        else
+        {
+            config = Configuration.Deserialize(PlayerPrefs.GetString("configuration"));
+        }
         trialDropdown.ClearOptions();
         trialDropdown.AddOptions(new List<string>(config.TrialStrings));
 
@@ -34,12 +46,14 @@ public class InputValidator : MonoBehaviour {
 
     public Configuration LoadConfiguration()
     {
+        Configuration config;
+
         string path = config_filepath;
         if (relativePath)
             path = Application.dataPath + "/" + config_filepath;
         path = path.Replace('/', '\\');
 
-        Configuration config = new Configuration(path);
+        config = new Configuration(path);
 
         string configString = Configuration.Serialize(config);
 

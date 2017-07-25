@@ -10,7 +10,7 @@ public class PauseScreen : MonoBehaviour {
     public string pauseMessage = "null";
 
     public ColorCorrectionCurves screenEffect;
-    public FirstPersonController controller;
+    public AugmentedController controller;
     public Canvas overlay;
     public Text displayText;
     public bool pause = false;
