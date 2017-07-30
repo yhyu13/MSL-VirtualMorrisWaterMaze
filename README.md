@@ -1,6 +1,9 @@
 # MSL-VirtualMorrisWaterMaze
 This repository contains the Unity project for the Memory Systems Lab version of the Virtual Morris Water Maze.
 
+
+![mazeV0.23.PNG](http://upload-images.jianshu.io/upload_images/1873837-cd7fcce8963d40ef.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 ## Modified Reinforcement Learning Version for "Test - trail" scenario:
 
 1. BinaryLogger create a .data file at 25%, 50%, 75% of total iterations.
