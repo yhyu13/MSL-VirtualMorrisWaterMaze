@@ -192,6 +192,16 @@ public class AsynchronousSocketListener : MonoBehaviour
                 pause.pauseMessage = (string)m.Value;
             }
         }
+        else if (m.Type == "Value")
+        {
+            try
+            {
+                Text ValueText = GameObject.Find("Value Text").GetComponent<Text>();
+                ValueText.text = "Value : " + m.Value;
+            }
+            catch (Exception) { }
+            
+        }
         else if (m.Type == "Rotate")
         {
             //Execute simulate keystroke
@@ -309,6 +319,16 @@ public class AsynchronousSocketListener : MonoBehaviour
                 Type = "PlayerPrefsI";
                 Value = data.Replace("PlayerPrefsI", "").Replace(AsynchronousSocketListener.endToken, "").Split(new char[] { ',' });
             }
+            else if (data.StartsWith("Value"))
+            {
+                Type = "Value";
+                Value = data.Replace("Value", "").Replace(AsynchronousSocketListener.endToken, "").Trim();
+            }
+            else if (data.StartsWith("Rotate"))
+            {
+                Type = "Rotate";
+                Value = data.Replace("Rotate", "").Replace(AsynchronousSocketListener.endToken, "").Trim();
+            }
             else if (data.StartsWith("Reward"))
             {
                 Type = "Reward";
@@ -328,11 +348,6 @@ public class AsynchronousSocketListener : MonoBehaviour
             {
                 Type = "Pause";
                 Value = data.Replace("Pause", "").Replace(AsynchronousSocketListener.endToken, "").Trim();
-            }
-            else if (data.StartsWith("Rotate"))
-            {
-                Type = "Rotate";
-                Value = data.Replace("Rotate", "").Replace(AsynchronousSocketListener.endToken, "").Trim();
             }
         }
 
@@ -476,6 +491,8 @@ public class AsynchronousSocketListener : MonoBehaviour
                         SendFrame(state.workSocket);
                 }
             }
+            Text ScoreText = GameObject.Find("Score Text").GetComponent<Text>();
+            ScoreText.text = "Score : " + Math.Round(CollisionEventTrigger.collisionScore + FPScontroller.penalty_score,2).ToString();
         }
         catch (Exception e)
         {

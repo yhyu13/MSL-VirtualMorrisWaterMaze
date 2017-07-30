@@ -1,2 +1,0 @@
-python SummaryAnalysis.py
-pause

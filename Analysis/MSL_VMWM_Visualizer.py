@@ -120,7 +120,7 @@ w.addItem(make_grid_item((0, 0, 0), (0, 0, 0, 0), (radius/10, radius/10, radius/
 # Make Image Base
 
 # Determine the background image according to meta phase
-bg_path = 'maze.png'
+bg_path = 'mazeV0.23.png'
 img = imread(os.path.join(local_directory, bg_path))
 
 image_scale = (radius * 2.0) / float(img.shape[0])

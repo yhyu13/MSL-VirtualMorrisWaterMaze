@@ -23,15 +23,17 @@ def update_target_graph(from_scope,to_scope):
     
 def process_salient_object(s):
     #print(s.shape())
+    
     s = scipy.misc.imresize(s,[200,320])
-    s = s / np.max(s)
-    mask = s>(0.+1e-4)
+    #print(np.max(s),np.mean(s),np.std(s))
+    s = np.clip(s / (np.max(s)+1e-2) * 10., 0.05, 0.95)
+    mask = s>(.25) # since 0 < s < 1, we show the salient objects in the first 75% bracket
     #print(s.shape)
     #print(mask)
     #print(mask.shape)
-    return mask , np.reshape([[0,i*255,0] for i in s.flatten()],(200,320,3))
+    return mask, np.reshape([[0,int(i*255),0] for i in s.flatten()],(200,320,3))
     
-def mask_color_img(img, mask=[], alpha=0.7):
+def mask_color_img(img, mask=[], grayScale=False, alpha=0.7):
     '''
     https://stackoverflow.com/questions/9193603/applying-a-coloured-overlay-to-an-image-in-either-pil-or-imagemagik
     img: cv2 image
@@ -41,17 +43,22 @@ def mask_color_img(img, mask=[], alpha=0.7):
 
     Ref: http://www.pyimagesearch.com/2016/03/07/transparent-overlays-with-opencv/
     '''
-    out = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    if grayScale:
+        out = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) # for 1 channel
+    else:
+        out = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY) # for 3 channels
+        out = cv2.cvtColor(out, cv2.COLOR_GRAY2BGR)
     img_layer = out.copy()
     img_layer[mask[0]] = mask[1][mask[0]]
-    out = cv2.addWeighted(img_layer, alpha, out, 1 - alpha, 0, out)
+    out = cv2.addWeighted(img_layer, alpha, out, 1-alpha, 0.0, out)
     return out
 
 # Processes Doom screen image to produce cropped and resized image. 
 def process_frame(s):
     #s = frame[10:-10,30:-30]
-    s = scipy.misc.imresize(s,[84,84])
-    s = np.reshape(s,[np.prod(s.shape)]) / 255.0
+    s = scipy.misc.imresize(s,[160,160])
+    s = np.reshape(s,[np.prod(s.shape)])
+    s = (s-np.mean(s)) / np.std(s)
     return s
 
 # Discounting function used to calculate discounted returns.

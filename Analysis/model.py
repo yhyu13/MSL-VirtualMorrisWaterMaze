@@ -9,6 +9,7 @@ import socket
 
 from helper import *
 from envVMWM import *
+import mobileNet
 exe_location='C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.18\\VMWM.exe'
 cfg_location = 'C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.18\\VMWM_data\\configuration_original.txt'
 
@@ -28,12 +29,17 @@ def sample_noise(shape):
     noise = np.random.normal(size=shape).astype(np.float32)
     return noise
     
-p_a = sample_noise([256, 3]) # 256 is rnn_size
-p_v = sample_noise([256, 1]) # 256 is rnn_size
-q_a = sample_noise([1, 3]) # 3 is action size
-q_v = sample_noise([1, 1]) # 1 is value size
+global_p_a = 0.
+global_q_a = 0.
+global_p_v = 0.
+global_q_v = 0.
+    
+def noisy_dense(x, size, name, bias=True, activation_fn=tf.identity):
 
-def noisy_dense(x, size, name, bias=True, activation_fn=tf.identity, p=0., q=0.):
+    global global_p_a
+    global global_q_a
+    global global_p_v
+    global global_q_v
 
     # the function used in eq.7,8 : f(x)=sgn(x)*sqrt(|x|)
     def f(x):
@@ -43,8 +49,25 @@ def noisy_dense(x, size, name, bias=True, activation_fn=tf.identity, p=0., q=0.)
                                                 maxval=1*1/np.power(x.get_shape().as_list()[1], 0.5))
     sigma_init = tf.constant_initializer(0.4/np.power(x.get_shape().as_list()[1], 0.5))
     # Sample noise from gaussian
-    #p = sample_noise([x.get_shape().as_list()[1], 1])
-    #q = sample_noise([1, size])
+    if name == 'global':
+        if size == 3: # check condition
+            p = sample_noise([256, 3]) # 256 is rnn_size
+            global_p_a = p
+            q = sample_noise([1, 3]) # 3 is action size
+            global_q_a = q
+        else:
+            p = sample_noise([256, 1]) # 256 is rnn_size
+            global_p_v = p
+            q = sample_noise([1, 1]) # 1 is value size
+            global_q_v = q
+    else: # for actors, copy p & q from the global network
+        if size == 3: # check condition
+            p = global_p_a
+            q = global_q_a
+        else:
+            p = global_p_v
+            q = global_q_v
+    
     f_p = f(p); f_q = f(q)
     w_epsilon = f_p*f_q; b_epsilon = tf.squeeze(f_q)
 
@@ -63,37 +86,87 @@ def noisy_dense(x, size, name, bias=True, activation_fn=tf.identity, p=0., q=0.)
     else:
         return activation_fn(ret)
     
+def use_mobileNet(inputs):
+        logits, _, salient_objects = mobileNet.mobilenet_v1_050(inputs,
+                                             num_classes=1001, # 1001 is pretrained imageNet num_classes
+                                             dropout_keep_prob=0.999,
+                                             is_training=False,
+                                             prediction_fn=None,
+                                             reuse=None,
+                                             spatial_squeeze=True)
+        return logits, salient_objects
 # Actor Network------------------------------------------------------------------------------------------------------------
 class AC_Network():
-    def __init__(self,s_size,a_size,scope,trainer,noisy):
+    def __init__(self,s_size,a_size,scope,trainer,noisy,grayScale):
         with tf.variable_scope(scope):
             #Input and visual encoding layers
-            self.p_a = tf.identity(p_a)
-            self.p_v = tf.identity(p_v)
-            self.q_a = tf.identity(q_a)
-            self.q_v = tf.identity(q_v)
             self.inputs = tf.placeholder(shape=[None,s_size],dtype=tf.float32)
-            self.imageIn = tf.reshape(self.inputs,shape=[-1,84,84,1])
-            self.conv1 = slim.conv2d(activation_fn=tf.nn.relu,
-                inputs=self.imageIn,num_outputs=16,
-                kernel_size=[8,8],stride=[2,2],padding='VALID')
-            self.conv2 = slim.conv2d(activation_fn=tf.nn.relu,
+            if grayScale:
+                self.imageIn = tf.reshape(self.inputs,shape=[-1,160,160,1])
+            else:
+                self.imageIn = tf.reshape(self.inputs,shape=[-1,160,160,3])
+            
+            # Create the model, use the default arg scope to configure the batch norm parameters.
+            '''
+            logits, self.salient_objects = use_mobileNet(self.imageIn)
+            
+            hidden = tf.nn.tanh(logits)
+            '''
+            self.conv1 = slim.conv2d(activation_fn=tf.nn.elu,
+                inputs=self.imageIn,num_outputs=32,
+                kernel_size=[5,5],stride=[2,2],padding='VALID')
+            self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,
                 inputs=self.conv1,num_outputs=32,
-                kernel_size=[4,4],stride=[2,2],padding='VALID')
+                kernel_size=[3,3],stride=[2,2],padding='VALID')
+            self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
+                inputs=self.conv2,num_outputs=64,
+                kernel_size=[3,3],stride=[2,2],padding='VALID')
+            self.conv4 = slim.conv2d(activation_fn=tf.nn.elu,
+                inputs=self.conv3,num_outputs=64,
+                kernel_size=[3,3],stride=[1,1],padding='VALID')
+            self.conv5 = slim.conv2d(activation_fn=tf.nn.elu,
+                inputs=self.conv4,num_outputs=64,
+                kernel_size=[3,3],stride=[1,1],padding='VALID')
+            self.conv6 = slim.conv2d(activation_fn=tf.nn.elu,
+                inputs=self.conv5,num_outputs=64,
+                kernel_size=[3,3],stride=[1,1],padding='VALID')
             
             # change: Salient Object implemented, reference : https://arxiv.org/pdf/1704.07911.pdf , p3
             if scope == 'worker_0':
-                feature_maps_avg2 = tf.reduce_mean(self.conv2, axis=(0,3),keep_dims=True)
-                #print(feature_maps_avg2.get_shape())
-                #print(self.conv2.get_shape())
-                feature_maps_avg1 = tf.reduce_mean(self.conv1, axis=(0,3),keep_dims=True)
+                feature_maps_avg6 = tf.reduce_mean(tf.nn.relu(self.conv6), axis=(0,3),keep_dims=True)
+                #print(feature_maps_avg6.get_shape())
+                feature_maps_avg5 = tf.reduce_mean(tf.nn.relu(self.conv5), axis=(0,3),keep_dims=True)
+                #print(feature_maps_avg5.get_shape())
+                feature_maps_avg4 = tf.reduce_mean(tf.nn.relu(self.conv4), axis=(0,3),keep_dims=True)
                 #print(feature_maps_avg1.get_shape())
-                #print(self.conv1.get_shape())
-                scale_up_deconv2 = tf.stop_gradient(tf.nn.conv2d_transpose(feature_maps_avg2,np.ones([4,4,1,1]).astype(np.float32), output_shape=[1,39,39,1], strides=[1,2,2,1],padding='VALID'))
-                #print(scale_up_deconv)
-                self.salient_objects = tf.stop_gradient(tf.squeeze(tf.nn.conv2d_transpose(tf.multiply(feature_maps_avg1,scale_up_deconv2),np.ones([8,8,1,1]).astype(np.float32), output_shape=[1,84,84,1],strides=[1,2,2,1],padding='VALID')))
+                feature_maps_avg3 = tf.reduce_mean(tf.nn.relu(self.conv3), axis=(0,3),keep_dims=True)
+                #print(feature_maps_avg3.get_shape())
+                feature_maps_avg2 = tf.reduce_mean(tf.nn.relu(self.conv2), axis=(0,3),keep_dims=True)
+                #print(feature_maps_avg2.get_shape())
+                feature_maps_avg1 = tf.reduce_mean(tf.nn.relu(self.conv1), axis=(0,3),keep_dims=True)
+                #print(feature_maps_avg1.get_shape())
+                
+                scale_up_deconv6 = tf.stop_gradient(tf.nn.conv2d_transpose(feature_maps_avg6,np.ones([3,3,1,1]).astype(np.float32), output_shape=feature_maps_avg5.get_shape().as_list(), strides=[1,1,1,1],padding='VALID'))
+                #print(scale_up_deconv6)
+                scale_up_deconv5 = tf.stop_gradient(tf.nn.conv2d_transpose(tf.multiply(feature_maps_avg5,scale_up_deconv6),np.ones([3,3,1,1]).astype(np.float32), output_shape=feature_maps_avg4.get_shape().as_list(), strides=[1,1,1,1],padding='VALID'))
+                #print(scale_up_deconv5)
+                scale_up_deconv4 = tf.stop_gradient(tf.nn.conv2d_transpose(tf.multiply(feature_maps_avg4,scale_up_deconv5),np.ones([3,3,1,1]).astype(np.float32), output_shape=feature_maps_avg3.get_shape().as_list(), strides=[1,1,1,1],padding='VALID'))
+                #print(scale_up_deconv4)
+                scale_up_deconv3 = tf.stop_gradient(tf.nn.conv2d_transpose(tf.multiply(feature_maps_avg3,scale_up_deconv4),np.ones([3,3,1,1]).astype(np.float32), output_shape=feature_maps_avg2.get_shape().as_list(), strides=[1,2,2,1],padding='VALID'))
+                #print(scale_up_deconv3)
+                scale_up_deconv2 = tf.stop_gradient(tf.nn.conv2d_transpose(tf.multiply(feature_maps_avg2,scale_up_deconv3),np.ones([3,3,1,1]).astype(np.float32), output_shape=feature_maps_avg1.get_shape().as_list(), strides=[1,2,2,1],padding='VALID'))
+                #print(scale_up_deconv2)
+                self.salient_objects = tf.stop_gradient(tf.squeeze(tf.nn.conv2d_transpose(tf.multiply(feature_maps_avg1,scale_up_deconv2),np.ones([5,5,1,1]).astype(np.float32), output_shape=[1,160,160,1],strides=[1,2,2,1],padding='VALID')))
             
-            hidden = slim.fully_connected(slim.flatten(self.conv2),256,activation_fn=tf.nn.relu)
+            kernel_size = mobileNet._reduced_kernel_size_for_small_input(self.conv6, [11 ,11])
+            net = slim.avg_pool2d(self.conv6, kernel_size, padding='VALID',
+                                  scope='AvgPool_1a')
+            net = slim.dropout(net, keep_prob=0.8, scope='Dropout_1b')
+            logits = slim.conv2d(net, 256, [1,1], [1,1], activation_fn=None,
+                                 normalizer_fn=None, scope='Conv2d_1c_1x1')
+            logits = tf.squeeze(logits, [1, 2], name='SpatialSqueeze')
+            hidden = tf.nn.tanh(logits)
+            
             
             #Recurrent network for temporal dependencies
             lstm_cell = tf.contrib.rnn.LayerNormBasicLSTMCell(256,dropout_keep_prob=0.8)
@@ -117,8 +190,8 @@ class AC_Network():
             if noisy:
                 # Apply noisy network on fully connected layers
                 # ref: https://arxiv.org/abs/1706.10295
-                self.policy = noisy_dense(rnn_out,name='noisy_fc1', size=a_size, activation_fn=tf.nn.softmax, p=self.p_a,q=self.q_a)
-                self.value = noisy_dense(rnn_out,name='noisy_fc1', size=1,p=self.p_v,q=self.q_v) # default activation_fn=tf.identity
+                self.policy = noisy_dense(rnn_out,name=scope, size=a_size, activation_fn=tf.nn.softmax)
+                self.value = noisy_dense(rnn_out,name=scope, size=1) # default activation_fn=tf.identity
             else:
                 #Output layers for policy and value estimations
                 self.policy = slim.fully_connected(rnn_out,a_size,
@@ -161,7 +234,7 @@ class AC_Network():
                 
 # VMWM Worker------------------------------------------------------------------------------------------------------------
 class Worker():
-    def __init__(self,name,s_size,a_size,trainer,model_path,global_episodes,noisy):
+    def __init__(self,name,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale):
         self.name = "worker_" + str(name)
         self.number = name        
         self.model_path = model_path
@@ -172,9 +245,11 @@ class Worker():
         self.episode_lengths = []
         self.episode_mean_values = []
         self.summary_writer = tf.summary.FileWriter("train_"+str(self.number))
+        self.noisy = noisy
+        self.grayScale = grayScale
 
         #Create the local copy of the network and the tensorflow op to copy global paramters to local network
-        self.local_AC = AC_Network(s_size,a_size,self.name,trainer,noisy)
+        self.local_AC = AC_Network(s_size,a_size,self.name,trainer,noisy,grayScale)
         self.update_local_ops = update_target_graph('global',self.name)        
         
         #Set up actions
@@ -184,7 +259,7 @@ class Worker():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
-        print(sock.getsockname())
+        #print(sock.getsockname())
         #sock.shutdown(socket.SHUT_WR)
         self.env = VMWMGame(cfg_location,exe_location)
         self.env.reset_cfg()
@@ -192,7 +267,7 @@ class Worker():
         self.env.set_local_host('127.0.0.1', port) # local host IP address & dynamic allocated port 
         
     def start(self,setting=0):
-        self.env.start()
+        self.env.start(self.grayScale)
         if self.name == "worker_0":
             # Set up OpenCV Window
             cv2.startWindowThread()
@@ -253,42 +328,52 @@ class Worker():
                 
                 s = self.env.get_screenImage()
                 # change
-                s1, s2 = None, None
+                s1, s2 = None, s
                 #episode_frames.append(s)
                 s = process_frame(s)
                 rnn_state = self.local_AC.state_init
                 
                 while self.env.is_episode_finished() == False:
                     #Take an action using probabilities from policy network output.
-                    a_dist,v,rnn_state,salient_objects = sess.run([self.local_AC.policy,self.local_AC.value,self.local_AC.state_out,self.local_AC.salient_objects], 
-                        feed_dict={self.local_AC.inputs:[s],
-                        self.local_AC.state_in[0]:rnn_state[0],
-                        self.local_AC.state_in[1]:rnn_state[1]})
+                    if self.name == "worker_0":
+                        a_dist,v,rnn_state,salient_objects = sess.run([self.local_AC.policy,self.local_AC.value,self.local_AC.state_out,self.local_AC.salient_objects], 
+                            feed_dict={self.local_AC.inputs:[s],
+                            self.local_AC.state_in[0]:rnn_state[0],
+                            self.local_AC.state_in[1]:rnn_state[1]})
+                    else:
+                        a_dist,v,rnn_state = sess.run([self.local_AC.policy,self.local_AC.value,self.local_AC.state_out], 
+                            feed_dict={self.local_AC.inputs:[s],
+                            self.local_AC.state_in[0]:rnn_state[0],
+                            self.local_AC.state_in[1]:rnn_state[1]})
+                    #print(a_dist)
                     a = np.random.choice(a_dist[0],p=a_dist[0])
                     a = np.argmax(a_dist == a)
                     
                     self.env.make_action(a,100)
                     r = self.env.get_reward()
                     # change
-                    sleep(0.1)
+                    #sleep(0.05)
                     d = self.env.is_episode_finished()
                     if d == False:
                         s1 = self.env.get_screenImage()
                         # change 
                         if self.name == "worker_0":
                             #print(np.ndim(salient_objects)) == 2
-                            s2 = mask_color_img(s1,process_salient_object(np.asarray(salient_objects)))
+                            s2 = mask_color_img(s2,process_salient_object(np.asarray(salient_objects)),self.grayScale)
                             cv2.imshow('frame', s2)
                             cv2.waitKey(1)
                             episode_frames.append(s2)
-                        else:
-                            episode_frames.append(s1)
+                        #else:
+                            #episode_frames.append(s1)
+                            
+                        s2 = s1
                         s1 = process_frame(s1)
                     else:
                         s1 = s
                         
                     episode_buffer.append([s,a,r,s1,d,v[0,0]])
                     episode_values.append(v[0,0])
+                    self.env.display_value(v[0,0])
 
                     episode_reward += r
                     s = s1
@@ -308,7 +393,6 @@ class Worker():
                         episode_buffer = []
                         sess.run(self.update_local_ops)
                         
-
                     if d == True:
                         break
                                     
@@ -323,15 +407,6 @@ class Worker():
                     
                 # Periodically save gifs of episodes, model parameters, and summary statistics.
                 if episode_count % 5 == 0 and episode_count != 0:
-                    if self.name == 'worker_0' and episode_count % 25 == 0:
-                        time_per_step = 0.05
-                        images = np.array(episode_frames)
-                        make_gif(images,'./frames/image'+str(episode_count)+'.gif',
-                            duration=len(images)*time_per_step,true_image=True,salience=False)
-                    if episode_count % 250 == 0 and self.name == 'worker_0':
-                        saver.save(sess,self.model_path+'/model-'+str(episode_count)+'.cptk')
-                        print ("Saved Model")
-
                     mean_reward = np.mean(self.episode_rewards[-5:])
                     mean_length = np.mean(self.episode_lengths[-5:])
                     mean_value = np.mean(self.episode_mean_values[-5:])
@@ -345,8 +420,20 @@ class Worker():
                     summary.value.add(tag='Losses/Grad Norm', simple_value=float(g_n))
                     summary.value.add(tag='Losses/Var Norm', simple_value=float(v_n))
                     self.summary_writer.add_summary(summary, episode_count)
-
                     self.summary_writer.flush()
+                    
+                    if self.name == 'worker_0' and episode_count % 25 == 0:
+                        time_per_step = 0.2 # Delay between action + 0.05 (unity delta time) * 2 (unity time scale)
+                        images = np.array(episode_frames)
+                        make_gif(images,'./frames/image'+str(episode_count)+'.gif',
+                            duration=len(images)*time_per_step,true_image=True,salience=False)
+                        sleep(5)
+                        print("Episode "+str(episode_count)+" score: %d" % episode_reward)
+                        print("Episodes so far mean reward: %d" % mean_reward)
+                    if episode_count % 250 == 0 and self.name == 'worker_0':
+                        saver.save(sess,self.model_path+'/model-'+str(episode_count)+'.cptk')
+                        print ("Saved Model")
+                        sleep(30)
                 if self.name == 'worker_0':
                     sess.run(self.increment)
                 episode_count += 1

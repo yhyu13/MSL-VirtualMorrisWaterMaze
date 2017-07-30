@@ -14,6 +14,7 @@ public class InputValidator : MonoBehaviour {
     public GameObject tcpServer;
 
     public static bool exists = false;
+    private bool firstLoad = true;
 
     void Start()
     {
@@ -22,12 +23,12 @@ public class InputValidator : MonoBehaviour {
         if (PlayerPrefs.HasKey("trial"))
             trialDropdown.value = PlayerPrefs.GetInt("trial");
         PlayerPrefs.SetInt("iteration", 0);
-        ConfigurationStateClearer state = FindObjectOfType<ConfigurationStateClearer>();
+        //ConfigurationStateClearer state = FindObjectOfType<ConfigurationStateClearer>();
         Configuration config;
-        if (state.firstLoad)
+        if (firstLoad)
         {
             config = LoadConfiguration();
-            state.firstLoad = false;
+            firstLoad = false;
         }
         else
         {

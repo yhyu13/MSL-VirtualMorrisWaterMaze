@@ -33,7 +33,7 @@ public class Configuration : System.Object {
 
     public Configuration()
     {
-        TrialStrings = "Practice - Flags,Practice - Hills,Practice - Visible Platform,Trial 1,Trial 2-5,Trial 6-10,Trial 11-15,Probe Trial".Split(new char[] { ',' });
+        TrialStrings = "Test Trial,Practice - Flags,Practice - Hills,Practice - Visible Platform,Trial 1,Trial 2-5,Trial 6-10,Trial 11-15,Probe Trial".Split(new char[] { ',' });
 
         int n = TrialStrings.Length;
 
@@ -41,7 +41,7 @@ public class Configuration : System.Object {
 
         enableTCP = false;
         port = 5005;
-        frameMode = 1;
+        frameMode = 2;
     }
 
     public Configuration(string path) : base()
@@ -55,14 +55,14 @@ public class Configuration : System.Object {
         try
         {
             //Read the trial strings
-            string trialStr = parser.ReadValue("Global", "TrialStrings", "Practice - Flags,Practice - Hills,Practice - Visible Platform,Trial 1,Trial 2-5,Trial 6-10,Trial 11-15,Probe Trial");
+            string trialStr = parser.ReadValue("Global", "TrialStrings", "Test Trial,Practice - Flags,Practice - Hills,Practice - Visible Platform,Trial 1,Trial 2-5,Trial 6-10,Trial 11-15,Probe Trial");
             TrialStrings = trialStr.Split(new char[] { ',' });
 
             //Read the global settings
 
             enableTCP = parser.ReadValue("Global", "EnableTCP", 0) != 0;
             port = parser.ReadValue("Global", "Port", 5005);
-            frameMode = parser.ReadValue("Global", "FrameMode", 1);
+            frameMode = parser.ReadValue("Global", "FrameMode", 2);
 
             //RandomSamplePositions
             string samplePosStr = parser.ReadValue("Global", "RandomSamplePoints", "");

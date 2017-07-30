@@ -11,8 +11,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
     public class FirstPersonController : MonoBehaviour
     {
         private bool m_humanPlayerMode = false; //false; //change
-        private int m_turnDirection; //= 1; //change
-        private float m_turnMagnitude; //= 30.0f; //change
+        private int m_turnDirection;//= 1; //change
+        private float m_turnMagnitude;//= 30.0f; //change
         public float penalty_reward = 0f; //change
         public float penalty_score = 0f; //change
         private float startTime;
@@ -139,28 +139,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             RaycastHit hitInfo;
             Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
                                m_CharacterController.height/2f, ~0, QueryTriggerInteraction.Ignore);
-<<<<<<< HEAD
 
             // always move along the camera forward as it is the direction that it being aimed at
-            m_MoveDir = transform.rotation * Vector3.forward * speed * Time.deltaTime * 50;
+            m_MoveDir = transform.rotation * Vector3.forward * speed;
             bool reachBoundary = Vector3.Distance(Vector3.zero, transform.position) > 18;
             if (reachBoundary)
             {
                 float currentTime = Time.time;
-                penalty_reward = -5.0f * (currentTime - startTime);
-                penalty_score -= 5.0f * (currentTime - startTime);
+                penalty_reward = -0.01f * (currentTime - startTime);
+                penalty_score -= 0.01f * (currentTime - startTime);
             }
             else
             {
                 penalty_reward = 0f;
             }
             //Debug.Log(reachBoundary);
-=======
-            desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
-            m_MoveDir.z = desiredMove.z * speed;
-                
->>>>>>> refs/remotes/kevroy314/master
             if (m_CharacterController.isGrounded)
             {
                 m_MoveDir.y = -m_StickToGroundForce;

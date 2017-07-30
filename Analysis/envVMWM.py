@@ -132,7 +132,7 @@ class VMWMGame:
         '''
         # Step 1. set grayScale (boolean)
         self.grayScale = grayScale
-        print('Port being used: {}'.format(self.Port))
+        #print('Port being used: {}'.format(self.Port))
         
         # Step 2. set Port by using set_parameters()
         self.set_parameters(parameters=['Port=5005','Port='+str(self.Port)])
@@ -168,13 +168,14 @@ class VMWMGame:
         
         #print('connection start')
         # Step 5. Set up Socket
-        print('local host--{}:{}'.format(TCP_IP,TCP_PORT))
+        
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((TCP_IP, TCP_PORT))
         s.setblocking(0)
+        print('local host--{}:{}'.format(TCP_IP,TCP_PORT))
         #print('connection established')
         self.s = s
-		# set a time out limit == 100ms
+        # set a time out limit == 100ms
         self.time_out = 100
         # Step 6. call reset_cfg() to make sure 'Port 5005' remains intact so that the next agent is able to call Step 2 successfully
         self.reset_cfg()
@@ -286,12 +287,21 @@ class VMWMGame:
             end = time.time()
         print("Doesn't read episode info.")
         
+    def display_value(self,value):
+        '''
+            set message as "Value"+"25.67" for example.
+            this method send the state value estimated by A3C back to unity and disply it on the screen.
+        '''
+        # End Message Token
+        END_TOKEN = "<EOF>"
+        self.s.send(bytes("Value"+ ('%.2f' % value) + END_TOKEN, 'utf8'))
+        
     def make_action(self,direc,magni):
         '''
            set message as "Rotate"+"1"+"22.5" for example.
-		   "1"=stay course
-		   "2"=turn right
-		   "0"=turn left
+           "1"=stay course
+           "2"=turn right
+           "0"=turn left
         '''
         direc = str(direc)
         magni = str(magni)

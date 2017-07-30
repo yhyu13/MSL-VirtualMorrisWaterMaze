@@ -10,7 +10,7 @@ public class PauseScreen : MonoBehaviour {
     public string pauseMessage = "null";
 
     public ColorCorrectionCurves screenEffect;
-    public AugmentedController controller;
+    //public AugmentedController controller;
     public Canvas overlay;
     public Text displayText;
     public bool pause = false;
@@ -27,7 +27,7 @@ public class PauseScreen : MonoBehaviour {
     void RefreshPauseState () {
         screenEffect.enabled = pause;
         overlay.gameObject.SetActive(pause);
-        controller.enabled = !pause;
+        //controller.enabled = !pause;
         displayText.text = PauseText;
 	}
 
