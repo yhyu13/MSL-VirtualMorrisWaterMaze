@@ -21,3 +21,9 @@ This repository contains the Unity project for the Memory Systems Lab version of
 3. First round training completed (A3C network 2CNN+1LSTM).
 
 ![Capture.PNG](http://upload-images.jianshu.io/upload_images/1873837-26d77968be99b564.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+4. Second round traniing results. It hard to interpret.
+
+![Train1.PNG](http://upload-images.jianshu.io/upload_images/1873837-49453c772adb46af.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![Train2.PNG](http://upload-images.jianshu.io/upload_images/1873837-06480ce03e0087fd.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
