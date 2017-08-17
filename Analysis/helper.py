@@ -1,13 +1,10 @@
 import numpy as np
 import random
 import tensorflow as tf
-import matplotlib.pyplot as plt
-import scipy.misc
 import os
 import csv
 import itertools
 import tensorflow.contrib.slim as slim
-import cv2
 
 # Helper Function------------------------------------------------------------------------------------------------------------
 # Copies one set of variables to another.
@@ -20,44 +17,10 @@ def update_target_graph(from_scope,to_scope):
     for from_var,to_var in zip(from_vars,to_vars):
         op_holder.append(to_var.assign(from_var))
     return op_holder
-    
-def process_salient_object(s):
-    #print(s.shape())
-    
-    s = scipy.misc.imresize(s,[200,320])
-    #print(np.max(s),np.mean(s),np.std(s))
-    s = np.clip(s / (np.max(s)+1e-2) * 10., 0.05, 0.95)
-    mask = s>(.25) # since 0 < s < 1, we show the salient objects in the first 75% bracket
-    #print(s.shape)
-    #print(mask)
-    #print(mask.shape)
-    return mask, np.reshape([[0,int(i*255),0] for i in s.flatten()],(200,320,3))
-    
-def mask_color_img(img, mask=[], grayScale=False, alpha=0.7):
-    '''
-    https://stackoverflow.com/questions/9193603/applying-a-coloured-overlay-to-an-image-in-either-pil-or-imagemagik
-    img: cv2 image
-    mask: bool or np.where
-    color: BGR triplet [_, _, _]. Default: [0, 255, 255] is yellow.
-    alpha: float [0, 1]. 
-
-    Ref: http://www.pyimagesearch.com/2016/03/07/transparent-overlays-with-opencv/
-    '''
-    if grayScale:
-        out = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) # for 1 channel
-    else:
-        out = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY) # for 3 channels
-        out = cv2.cvtColor(out, cv2.COLOR_GRAY2BGR)
-    img_layer = out.copy()
-    img_layer[mask[0]] = mask[1][mask[0]]
-    out = cv2.addWeighted(img_layer, alpha, out, 1-alpha, 0.0, out)
-    return out
 
 # Processes Doom screen image to produce cropped and resized image. 
 def process_frame(s):
     #s = frame[10:-10,30:-30]
-    s = scipy.misc.imresize(s,[160,160])
-    s = np.reshape(s,[np.prod(s.shape)])
     s = (s-np.mean(s)) / np.std(s)
     return s
 
@@ -130,38 +93,6 @@ def saveToCenter(i,rList,jList,bufferArray,summaryLength,h_size,sess,mainQN,time
             feed_dict={mainQN.scalarInput:np.vstack(bufferArray[:,0])/255.0,mainQN.trainLength:len(bufferArray),mainQN.state_in:state_train,mainQN.batch_size:1})
         wr.writerows(zip(bufferArray[:,1],bufferArray[:,2],a[:,0],a[:,1],a[:,2],a[:,3],v[:,0]))
     
-#This code allows gifs to be saved of the training episode for use in the Control Center.
-def make_gif(images, fname, duration=2, true_image=False,salience=False,salIMGS=None):
-  import moviepy.editor as mpy
-  
-  def make_frame(t):
-    try:
-      x = images[int(len(images)/duration*t)]
-    except:
-      x = images[-1]
-
-    if true_image:
-      return x.astype(np.uint8)
-    else:
-      return ((x+1)/2*255).astype(np.uint8)
-  
-  def make_mask(t):
-    try:
-      x = salIMGS[int(len(salIMGS)/duration*t)]
-    except:
-      x = salIMGS[-1]
-    return x
-
-  clip = mpy.VideoClip(make_frame, duration=duration)
-  if salience == True:
-    mask = mpy.VideoClip(make_mask, ismask=True,duration= duration)
-    clipB = clip.set_mask(mask)
-    clipB = clip.set_opacity(0)
-    mask = mask.set_opacity(0.1)
-    mask.write_gif(fname, fps = len(images) / duration,verbose=False)
-    #clipB.write_gif(fname, fps = len(images) / duration,verbose=False)
-  else:
-    clip.write_gif(fname, fps = len(images) / duration,verbose=False)
 
 
 

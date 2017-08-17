@@ -6,26 +6,30 @@ import os
 from inspect_checkpoints import print_tensors_in_checkpoint_file
 checkpoints_dir = './tmp/checkpoints'
 
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
+
 def main():
     if len(sys.argv) == 1:
         num_workers = 1
         noisy = True
     else:
         num_workers = int(sys.argv[1])
-        noisy = bool(sys.argv[2])
+        noisy = str2bool(sys.argv[2])
     max_episode_length = 200
     gamma = .99 # discount rate for advantage estimation and reward discounting
     s_size = 160*160
     a_size = 3 # Agent can move Left, Right, or Straight
     model_path = './model'
     gray = True
+    load_model = True
     print(" num_workers = %d" % num_workers)
     print(" noisy_enabled = %s" % str(noisy))
     
     print('''
     max_episode_length = 200
     gamma = .99 # discount rate for advantage estimation and reward discounting
-    s_size = 84*84 
+    s_size = 160*160 
     a_size = 3 # Agent can move Left, Right, or Straight
     load_model = False
     model_path = './model'
@@ -48,7 +52,7 @@ def main():
         workers = []
             # Create worker classes
         for i in range(num_workers):
-            worker = Worker(i,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale=gray)
+            worker = Worker(i,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale=gray,is_training= not load_model)
             workers.append(worker)
             worker.start(setting=0)
         saver = tf.train.Saver(max_to_keep=5)

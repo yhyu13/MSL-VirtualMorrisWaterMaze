@@ -62,9 +62,9 @@ public class TrialConfigurationLoader : MonoBehaviour {
         }
 
         platform.transform.position = new Vector3(c.PlatformPositions[trial][0].x, platform.transform.position.y, c.PlatformPositions[trial][0].y);
-        player.transform.position = new Vector3(c.PlayerStartPositions[trial][0].x, player.transform.position.y, c.PlayerStartPositions[trial][0].y);
+        player.transform.position = new Vector3((Random.value-0.5f)*25f, player.transform.position.y, (Random.value - 0.5f) * 25f);
         // Random 
-        player.transform.rotation = c.PlayerStartOrientations[trial][0];
+        player.transform.rotation = Quaternion.Euler(0,Random.value*360f,0);
 
         float timelimit = c.TrialTimeLimits[trial];
 

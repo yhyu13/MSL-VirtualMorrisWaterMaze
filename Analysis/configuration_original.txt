@@ -52,7 +52,7 @@ RandomSamplePoints=-13.251246367295806,1.1787533304453888,-7.7222205888245874,8.
 RandomSampleOrientations=1.12384017,1.23160284,0.49253471,5.11085802,5.024955
 [Test Trial]
 TimeoutInMilliseconds=15000
-PlatformPosition=0,0
+PlatformPosition=-7.0,12.0
 PlayerStartPosition=10.0,-10.0
 PlayerStartOrientationRadians=0.0
 FlagsVisible=1

@@ -15,6 +15,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_turnMagnitude;//= 30.0f; //change
         public float penalty_reward = 0f; //change
         public float penalty_score = 0f; //change
+        private float penalty_coff = 0.0f; //change
+        private float reward_coff = 0.01f; //change
         private float startTime;
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
@@ -142,17 +144,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // always move along the camera forward as it is the direction that it being aimed at
             m_MoveDir = transform.rotation * Vector3.forward * speed;
-            bool reachBoundary = Vector3.Distance(Vector3.zero, transform.position) > 18;
+            //change July 31th
+
+            /*bool reachBoundary = Vector3.Distance(Vector3.zero, transform.position) > 18;
             if (reachBoundary)
             {
                 float currentTime = Time.time;
-                penalty_reward = -0.01f * (currentTime - startTime);
-                penalty_score -= 0.01f * (currentTime - startTime);
+                if (currentTime > 10.0f) {
+                    penalty_reward = - penalty_coff*(currentTime - startTime);
+                    penalty_score -= penalty_coff * (currentTime - startTime);
+                }
             }
             else
             {
-                penalty_reward = 0f;
-            }
+                penalty_reward = +reward_coff * (15 - Vector3.Distance(Vector3.zero, transform.position));
+                penalty_score += reward_coff * (15 - Vector3.Distance(Vector3.zero, transform.position));
+            }*/
             //Debug.Log(reachBoundary);
 
             if (m_CharacterController.isGrounded)

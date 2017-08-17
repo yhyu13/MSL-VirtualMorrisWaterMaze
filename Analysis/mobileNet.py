@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
+
 """MobileNet v1.
 
 MobileNet is a general architecture and can be used for multiple use cases.
@@ -340,7 +341,7 @@ def mobilenet_v1(inputs,
       end_points['Logits'] = logits
       if prediction_fn:
         end_points['Predictions'] = prediction_fn(logits, scope='Predictions')
-  return logits, end_points, salient_objects
+  return logits,salient_objects
 
 mobilenet_v1.default_image_size = 224
 
@@ -416,3 +417,5 @@ def mobilenet_v1_arg_scope(is_training=True,
         with slim.arg_scope([slim.separable_conv2d],
                             weights_regularizer=depthwise_regularizer) as sc:
           return sc
+
+         

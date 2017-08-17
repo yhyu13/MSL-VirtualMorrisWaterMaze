@@ -56,7 +56,8 @@ public class BinaryLogger : MonoBehaviour {
         // doRecord is a boolean which indicate whether or not to record this trial
         doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
         doRecord = (iterations == 0) ? false : doRecord;
-
+        // always record binary logger //change Aug 12th
+        doRecord = true;
         if (!doRecord) // change
         {
             return;
