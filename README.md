@@ -13,7 +13,7 @@ In recent years, a variety of reinforcement learning algorithms have been applie
 * (2) it exhibits memory-based real time decision-making problem, 
 * (3) no clear optimal path searching strategy is given by a external supervisor. 
 
-Other benefits of MWM are: (1) the experimental development is matured with plenty of setup and measurement technique, (2) researchers have developed Virtual Morris Water Maze (A 3D environment powered by Unity 3D) where we can encapsulate as a reinforcement learning environment. 
+Two advantages of MWM are: (1) the experimental development is matured with plenty of setup and measurement technique, (2) researchers have developed Virtual Morris Water Maze (A 3D environment powered by Unity 3D) where we can encapsulate as a reinforcement learning environment. 
 
 Among the reinforcement learning algorithms, Asynchronous Advantage Actor-Critic (A3C) outperforms the previous state-of-the-art algorithm due to its parallelism nature. It takes advantages of multiple cores equipped by most modern computers to train faster and explore more. Another algorithm of interest is Recurrent Deterministic Policy Gradient (RDPG) which is a improvement to solve memory-based control problem in continuous action space. 
 
