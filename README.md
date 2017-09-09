@@ -4,26 +4,9 @@ This repository contains the Unity project for the Memory Systems Lab version of
 
 ![mazeV0.23.PNG](http://upload-images.jianshu.io/upload_images/1873837-cd7fcce8963d40ef.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-## Modified Reinforcement Learning Version for "Test - trail" scenario:
+\begin{abstract}
+We show a baseline agent for solving the Virtual Morris Water Maze task, using multiple actors with their own environments to simultaneously collect experience. The agent uses contemporary computer vision and memory dependency network. We test the model through variety of scenarios that successfully replicate the behaviors of both rodents and humans in these tasks. We also found the agent is able to outperform human testers in terms of distance travel, time elapsed and the complexity of path planning through enough training.
+\end{abstract}
 
-1. BinaryLogger create a .data file at 25%, 50%, 75% of total iterations.
-
-![change_June5.PNG](http://upload-images.jianshu.io/upload_images/1873837-765ed94e3894c185.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-![change_June5_2.PNG](http://upload-images.jianshu.io/upload_images/1873837-e173316969dcf724.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-2. Environment encapsulation completed.
-
-(A single instance Unity program shows in the center of the image below; The image input the agent will receive is transfered into gray scale and shows in the bottom-right corner)
-
-![change_July3_Success.PNG](http://upload-images.jianshu.io/upload_images/1873837-ae9a1fbc5051a946.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-3. First round training completed (A3C network 2CNN+1LSTM).
-
-![Capture.PNG](http://upload-images.jianshu.io/upload_images/1873837-26d77968be99b564.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-4. Second round traniing results. It hard to interpret.
-
-![Train1.PNG](http://upload-images.jianshu.io/upload_images/1873837-49453c772adb46af.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
-
-![Train2.PNG](http://upload-images.jianshu.io/upload_images/1873837-06480ce03e0087fd.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+\section{Introduction}
+In recent years, a variety of reinforcement learning algorithms have been applied to solve more complicated interaction environment than toy games. AlphaGo has crowned the game of Go and has innovated new methodologies beyond traditions. $Learning$ $to$ $Soar$ \cite{reddy2016learning} uncovers sensorimotor cues used by migratory birds through simulated reinforcement learning environment and applies the same technique to longer-range autonomous glider. We are inspired to connect the research between Neuroscience and Machine Learning because Neuroscience heavily inspires reinforcement learning as the concept of temporal difference and sparks Neural Network architecture such as convolutional and recurrent network. The classic experiment of Morris Water Maze (MWM) \cite{1} favors reinforcement learning especially because the following reasons: (1) it requires learning from interaction, (2) it exhibits memory-based real time decision-making problem, (3) no clear optimal path searching strategy is given by a external supervisor. \todo{Though we would train a supervised agent given human tester's data, and compare its path complexity with the RL agent} Other benefits of MWM are: (1) the experimental development is matured with plenty of setup and measurement technique, (2) researchers have developed Virtual Morris Water Maze (A 3D environment powered by Unity 3D) where we can encapsulate as a reinforcement learning environment \todo{reference?}. Among the reinforcement learning algorithms, Asynchronous Advantage Actor-Critic (A3C) \cite{mnih2016asynchronous} outperforms the previous state-of-the-art algorithm due to its parallelism nature. It takes advantages of multiple cores equipped by most modern computers to train faster and explore more. Another algorithm of interest is Recurrent Deterministic Policy Gradient (RDPG) \cite{heess2015memory} which is a improvement to solve memory-based control problem in continuous action space. 
