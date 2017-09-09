@@ -4,8 +4,12 @@ This repository contains the Unity project for the Memory Systems Lab version of
 
 ![mazeV0.23.PNG](http://upload-images.jianshu.io/upload_images/1873837-cd7fcce8963d40ef.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-# abstract
-We show a baseline agent for solving the Virtual Morris Water Maze task, using multiple actors with their own environments to simultaneously collect experience. The agent uses contemporary computer vision and memory dependency network. We test the model through variety of scenarios that successfully replicate the behaviors of both rodents and humans in these tasks. We also found the agent is able to outperform human testers in terms of distance travel, time elapsed and the complexity of path planning through enough training.
+The following discprition is cited from our ongoing publication.
+
+-----
+
+# Abstract
+We show a baseline agent for solving the Virtual Morris Water Maze task, using multiple actors with their own environments to simultaneously collect experience. The agent uses contemporary computer vision and memory dependency network. We test the model through variety of scenarios that successfully find the hidden platform fast and reliably. We also found the agent is able to outperform human testers in terms of distance travel, time elapsed and the complexity of path planning through enough training.
 
 # Introduction
 In recent years, a variety of reinforcement learning algorithms have been applied to solve more complicated interaction environment than toy games. We are inspired to connect the research between Neuroscience and Machine Learning because Neuroscience heavily inspires reinforcement learning as the concept of temporal difference and sparks Neural Network architecture such as convolutional and recurrent network. The classic experiment of Morris Water Maze (MWM) favors reinforcement learning especially because the following reasons: 
@@ -29,4 +33,4 @@ The communication between the Unity environment and the python script is built o
 
 # Ackonwledgement
 
-Thanks to Kevin Horecka at UIUC Beckman Institute for genuine support and insightful comment.
+Thanks to Kevin Horecka at UIUC Beckman Institute for establishing the orignal work, and for his generous support and insightful comments.
