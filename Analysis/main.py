@@ -4,28 +4,26 @@ import os
 from inspect_checkpoints import print_tensors_in_checkpoint_file
 checkpoints_dir = './tmp/checkpoints'
 
-def str2bool(v):
-  return v.lower() in ("yes", "true", "t", "1")
 
 def main():
-    if len(sys.argv) == 1:
-        num_workers = 1
-        noisy = True
-    else:
-        num_workers = int(sys.argv[1])
-        noisy = str2bool(sys.argv[2])
+
+    parser = argparse.ArgumentParser(description='Train or test neural net motor controller')
+    parser.add_argument('--load_model', dest='load_model', action='store_true', default=False)
+    parser.add_argument('--num_workers', dest='num_workers',action='store',default=1,type=int)
+	
     max_episode_length = 200
     gamma = .99 # discount rate for advantage estimation and reward discounting
     s_size = 160*160
     a_size = 3 # Agent can move Left, Right, or Straight
     model_path = './model'
     gray = True
-    load_model = True
+    load_model = args.load_model
+	num_workers = args.num_workers
+	noisy = False # enable noisy dense layer to encourage exploration.
     print(" num_workers = %d" % num_workers)
     print(" noisy_enabled = %s" % str(noisy))
     
     print('''
-    max_episode_length = 200
     gamma = .99 # discount rate for advantage estimation and reward discounting
     s_size = 160*160 
     a_size = 3 # Agent can move Left, Right, or Straight

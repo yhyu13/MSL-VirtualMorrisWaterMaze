@@ -48,4 +48,4 @@ The communication between the Unity environment and the python script is built o
 
 # Ackonwledgement
 
-Thanks to Kevin Horecka at UIUC Beckman Institute for establishing the orignal work, and for his generous support and insightful comments.
+Thanks to Kevin Horecka at UIUC Beckman Institute for establishing the orignal work, and for his generous support and insightful comments. Thanks to Arthur Juliani for offering greate introduction to A3C architecture:

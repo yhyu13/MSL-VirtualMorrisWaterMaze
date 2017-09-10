@@ -1,3 +1,6 @@
+# Thanks to Arthur Juliani for offering greate introduction to A3C architecture:
+# https://github.com/awjuliani/DeepRL-Agents/blob/master/A3C-Doom.ipynb
+
 import threading
 import multiprocessing
 import numpy as np
