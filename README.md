@@ -17,6 +17,8 @@ activate Maze
 
 Before start testing result, head to Analysis/model.py. Change exe_location and cfg_location to your local repository.
 
+Then download the pretrained model from: [google drive/model](https://drive.google.com/drive/folders/0B6zgGDAEaICRcXIzRTZaTWpFNkE?usp=sharing)
+
 Run a test trail with 15000 eps trained model. By default, the algo will start 6s later after the Unity window launched.
 ```
 python main.py --num_worker=1 --load_model
