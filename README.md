@@ -4,6 +4,21 @@ This repository contains the Unity project for the Memory Systems Lab version of
 
 ![mazeV0.23.PNG](http://upload-images.jianshu.io/upload_images/1873837-cd7fcce8963d40ef.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+# Instruction
+Download .zip file from the **Release** of thie repo. Then unzip.
+
+(Note I use tensorflow-gpu. The cpu .yml file is available to you as well)
+
+Install environment dependencies:
+```
+conda env create -f Maze.yml
+activate Maze
+```
+Run a test trail with 15000 eps trained model
+```
+python main.py --num_worker=1 --load_model
+```
+
 The following discprition is cited from our ongoing publication.
 
 -----
