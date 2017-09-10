@@ -10,8 +10,8 @@ import socket
 from helper import *
 from envVMWM import *
 #import mobileNet
-exe_location='C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.18\\VMWM.exe'
-cfg_location = 'C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.18\\VMWM_data\\configuration_original.txt'
+exe_location='C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.18test\\VMWM.exe'
+cfg_location = 'C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.18test\\VMWM_data\\configuration_original.txt'
 
 from random import choice
 from time import sleep
@@ -193,7 +193,7 @@ class AC_Network():
                 #Output layers for policy and value estimations
                 self.policy = slim.fully_connected(rnn_out,a_size,
                     activation_fn=tf.nn.softmax,
-                    weights_initializer=normalized_columns_initializer(0.8),
+                    weights_initializer=normalized_columns_initializer(0.01),
                     biases_initializer=None)
                 self.value = slim.fully_connected(rnn_out,1,
                     activation_fn=None,

@@ -1,5 +1,3 @@
-
-load_model = False # model's gonna use load_model as a global variable, so put it in front of model.
 from model import *
 import sys
 import os
@@ -31,7 +29,6 @@ def main():
     gamma = .99 # discount rate for advantage estimation and reward discounting
     s_size = 160*160 
     a_size = 3 # Agent can move Left, Right, or Straight
-    load_model = False
     model_path = './model'
     ''')
 
@@ -52,7 +49,7 @@ def main():
         workers = []
             # Create worker classes
         for i in range(num_workers):
-            worker = Worker(i,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale=gray,is_training= not load_model)
+            worker = Worker(i,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale=gray,is_training= False)
             workers.append(worker)
             worker.start(setting=0)
         saver = tf.train.Saver(max_to_keep=5)
