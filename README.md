@@ -51,6 +51,12 @@ The communication between the Unity environment and the python script is built o
 
 ![A3C Neural network.png](http://upload-images.jianshu.io/upload_images/1873837-3bb81c0f50f67140.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+# Result
+
+![Capture4.PNG](http://upload-images.jianshu.io/upload_images/1873837-21dde9a2e827589e.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+![Capture3.PNG](http://upload-images.jianshu.io/upload_images/1873837-f706cea38ca5d723.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 # Ackonwledgement
 
 Thanks to Kevin Horecka at UIUC Beckman Institute for establishing the orignal work, and for his generous support and insightful comments. Thanks to Arthur Juliani for offering greate introduction to A3C architecture:
