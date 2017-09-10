@@ -55,6 +55,9 @@ The communication between the Unity environment and the python script is built o
 
 ![Capture4.PNG](http://upload-images.jianshu.io/upload_images/1873837-21dde9a2e827589e.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
+![3750train1.png](http://upload-images.jianshu.io/upload_images/1873837-3942345805f426d2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![Capture3.PNG](http://upload-images.jianshu.io/upload_images/1873837-f706cea38ca5d723.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 ![Capture3.PNG](http://upload-images.jianshu.io/upload_images/1873837-f706cea38ca5d723.PNG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 # Ackonwledgement
