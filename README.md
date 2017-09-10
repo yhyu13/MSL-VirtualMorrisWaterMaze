@@ -7,14 +7,17 @@ This repository contains the Unity project for the Memory Systems Lab version of
 # Instruction
 Download .zip file from the **Release** of thie repo. Then unzip.
 
-(Note I use tensorflow-gpu. The cpu .yml file is available to you as well)
+*(Note I use tensorflow-gpu. The cpu .yml file is available to you as well)*
 
 Install environment dependencies:
 ```
 conda env create -f Maze.yml
 activate Maze
 ```
-Run a test trail with 15000 eps trained model
+
+Before start testing result, head to Analysis/model.py. Change exe_location and cfg_location to your local repository.
+
+Run a test trail with 15000 eps trained model. By default, the algo will start 6s later after the Unity window launched.
 ```
 python main.py --num_worker=1 --load_model
 ```
