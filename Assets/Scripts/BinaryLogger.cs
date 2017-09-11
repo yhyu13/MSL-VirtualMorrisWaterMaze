@@ -54,10 +54,10 @@ public class BinaryLogger : MonoBehaviour {
         filename = filename.Replace("<datetime>", timeString);
 
         // doRecord is a boolean which indicate whether or not to record this trial
-        doRecord = iterations % (numberOfExecutionsForThisTrial * recordEveryWhatPercent / 100) == 0;
+        doRecord = iterations %  recordEveryWhatPercent == 0;
         doRecord = (iterations == 0) ? false : doRecord;
         // always record binary logger //change Aug 12th
-        doRecord = true;
+        //doRecord = true;
         if (!doRecord) // change
         {
             return;
