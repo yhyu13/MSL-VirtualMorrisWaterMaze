@@ -1,0 +1,147 @@
+; Water area bounds are -18.6m to 18.6m along X and Z axes. Player height is 1.78m - all spatial units are in meters
+
+; The [Global] section contains properties which will impact the overall program execution
+; 
+; TrialStrings is a comma separated list of following sections to be parsed. Each title 
+; will be populated as a list on the main menu dropdown. If a section is missing, the 
+; default values will be used.
+; 
+; Sections can have the following options:
+; 
+; TimeoutInMilliseconds (float or None, None is default, defaults are 0)
+; PlatformPosition (comma separated list of floats, defaults are 0)
+; PlayerStartPosition (comma separated list of floats, defaults are 0)
+; PlayerStartOrientationRadians (float, default is 0)
+; FlagsVisible (1 or 0, default is 0)
+; PlatformVisible (1 or 0, default is 0)
+; HillsVisible (1 or 0, default is 0)
+; 
+; NOTE: Landmark Order is [Block Wall, Corner Wall, Tires, Tress, Columns, 
+; Fountain, Vases] for LandmarkVisibilities
+; 
+; LandmarkVisibilities (1 or 0, default is 1)
+; PlatformTriggerEnabled (1 or 0, default is 1)
+; NumberOfExecutions (non-zero, positive int, default is 1, 0 is not allowed)
+; SoundEffectsEnabled (1 or 0, default is 1)
+; MovementSpeed (float, default is 5, units is meters per second)
+; 
+; Note that if NumberOfExecutions is greater than 1, you can list more values in PlatformPosition, PlayerStartPosition, and PlayerStartOrientationRadians
+; If only 2 values are provided, they will be duplicated for the remaining executions
+; 
+; Example Section:
+; [Example]
+; TimeoutInMilliseconds=None
+; PlatformPosition=0.0,0.0,1.0,1.0
+; PlayerStartPosition=0.0,0.0,3.0,3.0
+; PlayerStartOrientationRadians=0.0,1.0
+; FlagsVisible=1
+; PlatformVisible=0
+; HillsVisible=1
+; LandmarkVisibilities=1
+; PlatformTriggerEnabled=1
+; NumberOfExecutions=2
+; SoundEffectsEnabled=1
+; MovementSpeed=5
+[Global]
+TrialStrings=Test Trial,Practice - Flags,Practice - Hills,Practice - Visible Platform,Trial 1,Trial 2-5,Trial 6-10,Trial 11-15,Probe Trial
+EnableTCP=1
+Port=5005
+; Frame Mode 0=continuous, 1=as reply, 2=on request (ImageRequest)
+FrameMode=2
+RandomSamplePoints=-13.251246367295806,1.1787533304453888,-7.7222205888245874,8.431950728578931,0.87374547197568475,12.569722112742397,-14.720895407423896,-3.6703927664892539,12.825414533708608,11.405512418175761
+RandomSampleOrientations=1.12384017,1.23160284,0.49253471,5.11085802,5.024955
+[Test Trial]
+TimeoutInMilliseconds=15000
+PlatformPosition=-7.0,12.0
+PlayerStartPosition=10.0,-10.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=0
+PlatformVisible=0
+HillsVisible=0
+LandmarkVisibilities=1
+PlatformTriggerEnabled=1
+NumberOfExecutions=2000
+SoundEffectsEnabled=1
+MovementSpeed=7
+[Practice - Flags]
+TimeoutInMilliseconds=None
+PlatformPosition=5.0,-7.0
+PlayerStartPosition=0.0,0.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=1
+PlatformVisible=0
+HillsVisible=0
+LandmarkVisibilities=1
+PlatformTriggerEnabled=1
+[Practice - Hills]
+TimeoutInMilliseconds=None
+PlayerStartPosition=0.0,0.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=0
+PlatformVisible=0
+HillsVisible=1
+LandmarkVisibilities=0
+PlatformTriggerEnabled=0
+[Practice - Visible Platform]
+TimeoutInMilliseconds=None
+PlatformPosition=5.0,-7.0
+PlayerStartPosition=0.0,0.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=0
+PlatformVisible=1
+HillsVisible=0
+LandmarkVisibilities=1
+PlatformTriggerEnabled=1
+[Trial 1]
+TimeoutInMilliseconds=120000
+PlatformPosition=5.0,-7.0
+PlayerStartPosition=0.0,0.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=0
+PlatformVisible=0
+HillsVisible=0
+LandmarkVisibilities=1
+PlatformTriggerEnabled=1
+[Trial 2-5]
+TimeoutInMilliseconds=120000
+PlatformPosition=5.0,-7.0,5.0,-7.0,5.0,-7.0,5.0,-7.0
+PlayerStartPosition=0.0,0.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=0
+PlatformVisible=0
+HillsVisible=0
+LandmarkVisibilities=1
+PlatformTriggerEnabled=1
+NumberOfExecutions=4
+[Trial 6-10]
+TimeoutInMilliseconds=120000
+PlatformPosition=5.0,-7.0,5.0,-7.0,5.0,-7.0,5.0,-7.0,5.0,-7.0
+PlayerStartPosition=0.0,0.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=0
+PlatformVisible=0
+HillsVisible=0
+LandmarkVisibilities=1
+PlatformTriggerEnabled=1
+NumberOfExecutions=5
+[Trial 11-15]
+TimeoutInMilliseconds=120000
+PlatformPosition=5.0,-7.0,5.0,-7.0,5.0,-7.0,5.0,-7.0,5.0,-7.0
+PlayerStartPosition=0.0,0.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=0
+PlatformVisible=0
+HillsVisible=0
+LandmarkVisibilities=1
+PlatformTriggerEnabled=1
+NumberOfExecutions=5
+[Probe Trial]
+TimeoutInMilliseconds=60000
+PlatformPosition=5.0,-7.0
+PlayerStartPosition=0.0,0.0
+PlayerStartOrientationRadians=0.0
+FlagsVisible=0
+PlatformVisible=0
+HillsVisible=0
+LandmarkVisibilities=1
+PlatformTriggerEnabled=0

@@ -15,7 +15,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private float m_turnMagnitude;//= 30.0f; //change
         public float penalty_reward = 0f; //change
         public float penalty_score = 0f; //change
-        private float penalty_coff = 0.0f; //change
+        private float penalty_coff = 0.01f; //change
         private float reward_coff = 0.01f; //change
         private float startTime;
         [SerializeField] private bool m_IsWalking;
@@ -145,16 +145,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // always move along the camera forward as it is the direction that it being aimed at
             m_MoveDir = transform.rotation * Vector3.forward * speed;
             //change July 31th
-
-            /*bool reachBoundary = Vector3.Distance(Vector3.zero, transform.position) > 18;
+            /*
+            bool reachBoundary = Vector3.Distance(Vector3.zero, transform.position) > 18;
             if (reachBoundary)
             {
                 float currentTime = Time.time;
-                if (currentTime > 10.0f) {
+                if (currentTime > .0f) {
                     penalty_reward = - penalty_coff*(currentTime - startTime);
                     penalty_score -= penalty_coff * (currentTime - startTime);
                 }
             }
+            
             else
             {
                 penalty_reward = +reward_coff * (15 - Vector3.Distance(Vector3.zero, transform.position));

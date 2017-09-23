@@ -31,6 +31,7 @@ public class AsynchronousSocketListener : MonoBehaviour
     public FirstPersonController FPScontroller;
     public CollisionEventTrigger CollisionEventTrigger;
     public PauseScreen pause;
+    public TrialTimer timer;
     public BinaryLogger BinaryLogger;
 
     public static bool instanceExists = false;
@@ -250,6 +251,18 @@ public class AsynchronousSocketListener : MonoBehaviour
                 Send(handler, EOF);
             }
         }
+        else if (m.Type == "EpisodeLen")
+        {
+            if (timer != null)
+            {
+                byte[] typeData = Encoding.UTF8.GetBytes("EpisodeLen");
+                byte[] EOF = Encoding.UTF8.GetBytes(endToken);
+                byte[] elapsed = Encoding.UTF8.GetBytes((timer.elapsed.ToString()));
+                Send(handler, typeData);
+                Send(handler, elapsed);
+                Send(handler, EOF);
+            }
+        }
     }
 
     public void SendFrame(Socket handler)
@@ -342,6 +355,11 @@ public class AsynchronousSocketListener : MonoBehaviour
             else if (data.StartsWith("EpisodeEnd"))
             {
                 Type = "EpisodeEnd";
+                Value = null;
+            }
+            else if (data.StartsWith("EpisodeLen"))
+            {
+                Type = "EpisodeLen";
                 Value = null;
             }
             else if (data.StartsWith("Pause"))

@@ -9,7 +9,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Train or test neural net motor controller')
     parser.add_argument('--load_model', dest='load_model', action='store_true', default=False)
-    parser.add_argument('--num_workers', dest='num_workers',action='store',default=1,type=int)
+    parser.add_argument('--num_workers', dest='num_workers',action='store',default=4,type=int)
     args = parser.parse_args()
     max_episode_length = 200
     gamma = .99 # discount rate for advantage estimation and reward discounting
@@ -47,7 +47,7 @@ def main():
         workers = []
             # Create worker classes
         for i in range(num_workers):
-            worker = Worker(i,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale=gray,is_training= False)
+            worker = Worker(i,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale=gray,is_training= True)
             workers.append(worker)
             worker.start(setting=0)
         saver = tf.train.Saver(max_to_keep=5)

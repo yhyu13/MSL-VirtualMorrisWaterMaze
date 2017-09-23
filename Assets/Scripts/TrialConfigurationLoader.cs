@@ -87,6 +87,7 @@ public class TrialConfigurationLoader : MonoBehaviour {
         FindObjectOfType<AsynchronousSocketListener>().FPScontroller = player.GetComponent<FirstPersonController>();
         FindObjectOfType<AsynchronousSocketListener>().CollisionEventTrigger = platformTrigger.GetComponent<CollisionEventTrigger>();
         FindObjectOfType<AsynchronousSocketListener>().pause = pauseScreen;
+        FindObjectOfType<AsynchronousSocketListener>().timer = timer;
         //FindObjectOfType<AsynchronousSocketListener>().port = c.Port;
     }
 

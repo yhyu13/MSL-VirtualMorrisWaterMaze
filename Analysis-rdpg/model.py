@@ -13,18 +13,14 @@ import socket
 from helper import *
 from envVMWM import *
 #import mobileNet
-exe_location='C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.18test\\VMWM.exe'
-cfg_location = 'C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.18test\\VMWM_data\\configuration_original.txt'
+exe_location='C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.31\\VMWM.exe'
+cfg_location = 'C:\\Users\\YuHang\\Desktop\\Water_Maze\\v0.31\\VMWM_data\\configuration_original.txt'
 
 from random import choice
 from time import sleep
 from time import time
 import cv2
- 
-def softmax(x):
-    """Compute softmax values for each sets of scores in x."""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum(axis=0) # only difference
+
 
 # ================================================================
 # Model components
@@ -33,77 +29,10 @@ def softmax(x):
 # Added by Andrew Liao
 # for NoisyNet-DQN (using Factorised Gaussian noise)
 # modified from ```dense``` function
-def sample_noise(shape):
-    noise = np.random.normal(size=shape).astype(np.float32)
-    #noise = np.ones(size=shape).astype(np.float32) # whenever not in training, simply return a matrix of ones. 
-    return noise
-    
-global_p_a = 0.
-global_q_a = 0.
-global_p_v = 0.
-global_q_v = 0.
-    
-def noisy_dense(x, size, name, bias=True, activation_fn=tf.identity, factorized=False):
 
-    global global_p_a
-    global global_q_a
-    global global_p_v
-    global global_q_v
-    # https://arxiv.org/pdf/1706.10295.pdf page 4
-    # the function used in eq.7,8 : f(x)=sgn(x)*sqrt(|x|)
-    def f(x):
-        return tf.multiply(tf.sign(x), tf.pow(tf.abs(x), 0.5))
-    # Initializer of \mu and \sigma 
-    mu_init = tf.random_uniform_initializer(minval=-1*1/np.power(x.get_shape().as_list()[1], 0.5),     
-                                                maxval=1*1/np.power(x.get_shape().as_list()[1], 0.5))
-    sigma_init = tf.constant_initializer(0.4/np.power(x.get_shape().as_list()[1], 0.5))
-    # Sample noise from gaussian
-    if name == 'global':
-        if size == 3: # check condition
-            p = sample_noise([128, 3]) # 256 is rnn_size
-            global_p_a = p
-            q = sample_noise([1, 3]) # 3 is action size
-            global_q_a = q
-        else:
-            p = sample_noise([128, 1]) # 256 is rnn_size
-            global_p_v = p
-            q = sample_noise([1, 1]) # 1 is value size
-            global_q_v = q
-    else: # for actors, copy p & q from the global network
-        if size == 3: # check condition
-            p = global_p_a
-            q = global_q_a
-        else:
-            p = global_p_v
-            q = global_q_v
-    
-    f_p = f(p); f_q = f(q)
-    w_epsilon = f_p*f_q; b_epsilon = tf.squeeze(f_q)
-    if not factorized: # just resample the noisy matrix to get independent guassian noise
-        w_epsilon = tf.identity(sample_noise(w_epsilon.get_shape().as_list()))
-    # w = w_mu + w_sigma*w_epsilon
-    options = {3:'action',1:'value'}
-    w_mu = tf.get_variable(name + "/w_mu" + options[size], [x.get_shape()[1], size], initializer=mu_init)
-    w_sigma = tf.get_variable(name + "/w_sigma" + options[size], [x.get_shape()[1], size], initializer=sigma_init)
-    w = w_mu + tf.multiply(w_sigma, w_epsilon)
-    ret = tf.matmul(x, w)
-    if bias:
-        # b = b_mu + b_sigma*b_epsilon
-        b_mu = tf.get_variable(name + "/b_mu" + options[size], [size], initializer=mu_init)
-        b_sigma = tf.get_variable(name + "/b_sigma" + options[size], [size], initializer=sigma_init)
-        b = b_mu + tf.multiply(b_sigma, b_epsilon)
-        return activation_fn(ret + b)
-    else:
-        return activation_fn(ret)
-    
-def use_mobileNet(inputs):
-        logits, salient_objects = mobileNet.mobilenet_v1_050(inputs,
-                                             is_training=False,
-                                             prediction_fn=None)
-        return logits, salient_objects
 # Actor Network------------------------------------------------------------------------------------------------------------
-class AC_Network():
-    def __init__(self,s_size,a_size,scope,trainer,noisy,grayScale):
+class Actor_Network():
+    def __init__(self,s_size,a_size,scope,trainer,grayScale):
         with tf.variable_scope(scope):
             #Input and visual encoding layers
             self.inputs = tf.placeholder(shape=[None,s_size],dtype=tf.float32)
@@ -119,13 +48,13 @@ class AC_Network():
             
             hidden = tf.nn.tanh(logits)
             '''
-            self.conv1 = slim.conv2d(activation_fn=tf.nn.elu,
+            self.conv1 = slim.conv2d(activation_fn=tf.nn.relu,
                 inputs=self.imageIn,num_outputs=32,
                 kernel_size=[5,5],stride=[2,2],padding='VALID')
-            self.conv2 = slim.conv2d(activation_fn=tf.nn.elu,
+            self.conv2 = slim.conv2d(activation_fn=tf.nn.relu,
                 inputs=self.conv1,num_outputs=64,
                 kernel_size=[5,5],stride=[2,2],padding='VALID')
-            self.conv3 = slim.conv2d(activation_fn=tf.nn.elu,
+            self.conv3 = slim.conv2d(activation_fn=tf.nn.relu,
                 inputs=self.conv2,num_outputs=128,
                 kernel_size=[5,5],stride=[2,2],padding='VALID')
             
@@ -145,24 +74,8 @@ class AC_Network():
                 scale_up_deconv2 = tf.stop_gradient(tf.nn.conv2d_transpose(tf.multiply(feature_maps_avg2,scale_up_deconv3),np.ones([5,5,1,1]).astype(np.float32), output_shape=feature_maps_avg1.get_shape().as_list(), strides=[1,2,2,1],padding='VALID'))
                 #print(scale_up_deconv2)
                 self.salient_objects = tf.stop_gradient(tf.squeeze(tf.nn.conv2d_transpose(tf.multiply(feature_maps_avg1,scale_up_deconv2),np.ones([5,5,1,1]).astype(np.float32), output_shape=[1,160,160,1],strides=[1,2,2,1],padding='VALID')))
-            '''
-            # Augst 1st
-            # 1, https://arxiv.org/pdf/1611.07078.pdf A DEEP LEARNING APPROACH FOR JOINT VIDEO FRAME AND REWARD PREDICTION IN ATARI GAMES
-            # 2, https://arxiv.org/pdf/1707.06203.pdf The I2A architecture
-            # Now, TO DO: Implement an additional NN that can imagine 2 steps ahead'''
             
-            # All convNet hidden state
-            '''
-            kernel_size = mobileNet._reduced_kernel_size_for_small_input(self.conv3, [7 ,7])
-            net = slim.avg_pool2d(self.conv3, kernel_size, padding='VALID',
-                                  scope='AvgPool_1a')
-            net = slim.dropout(net, keep_prob=0.8, scope='Dropout_1b')
-            logits = slim.conv2d(net, 128, [1,1], activation_fn=None,
-                                 normalizer_fn=None, scope='Conv2d_1c_1x1')
-            logits = tf.squeeze(logits, [1, 2], name='SpatialSqueeze')
-            hidden = tf.nn.tanh(logits)'''
-            
-            hidden = slim.fully_connected(slim.flatten(self.conv3),128,activation_fn=tf.nn.elu)
+            hidden = slim.fully_connected(slim.flatten(self.conv3),128,activation_fn=tf.nn.relu)
             
             
             #Recurrent network for temporal dependencies
@@ -185,74 +98,147 @@ class AC_Network():
             rnn_out = tf.reshape(lstm_outputs, [-1, 128])
             
             # try the case without lstm
-            #rnn_out = hidden
+            #rnn_out = tf.tanh(hidden)
             
-            if noisy:
-                # Apply noisy network on fully connected layers
-                # ref: https://arxiv.org/abs/1706.10295
-                self.policy = noisy_dense(rnn_out,name=scope, size=a_size, activation_fn=tf.nn.softmax)
-                self.value = noisy_dense(rnn_out,name=scope, size=1) # default activation_fn=tf.identity
+			#Output layers for policy estimations
+			self.policy = slim.fully_connected(rnn_out,a_size,
+				activation_fn=tf.nn.softmax,
+				weights_initializer=normalized_columns_initializer(0.01),
+				biases_initializer=None)
+				
+		self.q_gradient_input = tf.placeholder("float",[None,self.a_size])
+		local_var = tf.get_collection(tf.Graphykeys.TRAINABLE_VARIABLES,self.scope)
+		global_var = tf.get_collection(tf.Graphykeys.TRAINABLE_VARIABLES,'global/actor')
+	    self.parameters_gradients,self.global_norm = tf.clip_by_global_norm(tf.gradients(self.policy,local_var,self.q_gradient_input),5.0)
+		self.optimizer = trainer.apply_gradients(zip(self.parameters_gradienet,global_var))
+		
+	def pi(self,states,rnn_state):
+		feed_dict = {self.inputs:states,self.state_in[0]:rnn_state[0],self.state_in[1]:rnn_state[1]}
+		return sess.run(self.policy,feed_dict=feed_dict)
+		
+	def train(q_gradient_input,states,rnn_state):
+		feed_dict = {self.q_gradient_input:q_gradient_input,self.inputs:states,self.state_in[0]:rnn_state[0],self.state_in[1]:rnn_state[1]}
+		return sess.run([self.optimizer],feed_dict=feed_dict)
+		
+# Actor Network------------------------------------------------------------------------------------------------------------
+class Critic_Network():
+    def __init__(self,s_size,a_size,scope,trainer,grayScale):
+        with tf.variable_scope(scope):
+            #Input and visual encoding layers
+            self.inputs = tf.placeholder(shape=[None,s_size],dtype=tf.float32)
+			self.inputs_action = tf.placeholder(shape=[None,a_size],dtype=tf.float32)
+            if grayScale:
+                self.imageIn = tf.reshape(self.inputs,shape=[-1,160,160,1])
             else:
-                #Output layers for policy and value estimations
-                self.policy = slim.fully_connected(rnn_out,a_size,
-                    activation_fn=tf.nn.softmax,
-                    weights_initializer=normalized_columns_initializer(0.01),
-                    biases_initializer=None)
-                self.value = slim.fully_connected(rnn_out,1,
-                    activation_fn=None,
-                    weights_initializer=normalized_columns_initializer(1.0),
-                    biases_initializer=None)
-                    
-            #Only the worker network need ops for loss functions and gradient updating.
-            if scope != 'global':
-                self.actions = tf.placeholder(shape=[None],dtype=tf.int32)
-                self.actions_onehot = tf.one_hot(self.actions,a_size,dtype=tf.float32)
-                self.target_v = tf.placeholder(shape=[None],dtype=tf.float32)
-                self.advantages = tf.placeholder(shape=[None],dtype=tf.float32)
-
-                self.responsible_outputs = tf.reduce_sum(self.policy * self.actions_onehot, [1])
-
-                #Loss functions
-                self.value_loss = 0.5 * tf.reduce_sum(tf.square(self.target_v - tf.reshape(self.value,[-1])))
-                self.policy_loss = -tf.reduce_sum(tf.log(self.responsible_outputs)*self.advantages)
-                if noisy:
-                    self.entropy = tf.constant(42.,dtype=tf.float32)
-                    self.loss = 0.5 * self.value_loss + self.policy_loss
-                else:
-                    self.entropy = - tf.reduce_sum(self.policy * tf.log(self.policy))
-                    self.loss = 0.5 * self.value_loss + self.policy_loss - self.entropy * 0.01
-
-                #Get gradients from local network using local losses
-                local_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope)
-                self.gradients = tf.gradients(self.loss,local_vars)
-                self.var_norms = tf.global_norm(local_vars)
-                grads,self.grad_norms = tf.clip_by_global_norm(self.gradients,40.0)
-                
-                #Apply local gradients to global network
-                #Comment these two lines out to stop training
-                global_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global')
-                self.apply_grads = trainer.apply_gradients(zip(grads,global_vars))
+                self.imageIn = tf.reshape(self.inputs,shape=[-1,160,160,3])
+            
+            # Create the model, use the default arg scope to configure the batch norm parameters.
+            '''
+            logits,self.salient_objects = use_mobileNet(self.imageIn)
+            self.logits = logits[0]
+            
+            hidden = tf.nn.tanh(logits)
+            '''
+            self.conv1 = slim.conv2d(activation_fn=tf.nn.relu,
+                inputs=self.imageIn,num_outputs=32,
+                kernel_size=[5,5],stride=[2,2],padding='VALID')
+            self.conv2 = slim.conv2d(activation_fn=tf.nn.relu,
+                inputs=self.conv1,num_outputs=64,
+                kernel_size=[5,5],stride=[2,2],padding='VALID')
+            self.conv3 = slim.conv2d(activation_fn=tf.nn.relu,
+                inputs=self.conv2,num_outputs=128,
+                kernel_size=[5,5],stride=[2,2],padding='VALID')
+            
+            hidden = slim.fully_connected(slim.flatten(self.conv3),128,activation_fn=tf.nn.relu)
+			hidden_action = slim.fully_connected(self.inputs_action,128,activation_fn=tf.nn.relu)
+			hidden = tf.add(hidden,hidden_action)
+            
+            
+            #Recurrent network for temporal dependencies
+            lstm_cell = tf.contrib.rnn.LayerNormBasicLSTMCell(128,dropout_keep_prob=0.8)
+            #lstm_cell = tf.contrib.rnn.DropoutWrapper(lstm_cell,output_keep_prob=0.5)
+            c_init = np.zeros((1, lstm_cell.state_size.c), np.float32)
+            h_init = np.zeros((1, lstm_cell.state_size.h), np.float32)
+            self.state_init = [c_init, h_init]
+            c_in = tf.placeholder(tf.float32, [1, lstm_cell.state_size.c])
+            h_in = tf.placeholder(tf.float32, [1, lstm_cell.state_size.h])
+            self.state_in = (c_in, h_in)
+            rnn_in = tf.expand_dims(hidden, [0])
+            step_size = tf.shape(self.imageIn)[:1]
+            state_in = tf.contrib.rnn.LSTMStateTuple(c_in, h_in)
+            lstm_outputs, lstm_state = tf.nn.dynamic_rnn(
+                lstm_cell, rnn_in, initial_state=state_in, sequence_length=step_size,
+                time_major=False)
+            lstm_c, lstm_h = lstm_state
+            self.state_out = (lstm_c[:1, :], lstm_h[:1, :])
+            rnn_out = tf.reshape(lstm_outputs, [-1, 128])
+            
+            # try the case without lstm
+            #rnn_out = tf.tanh(hidden)
+            
+			#Output layers value estimations
+			self.value = slim.fully_connected(rnn_out,1,
+				activation_fn=None,
+				weights_initializer=normalized_columns_initializer(1.0),
+				biases_initializer=None)
+		
+		# TRAINING
+		self.y_input = tf.placeholder("float",[None,1])
+		
+		local_var = tf.get_collection(tf.Graphykeys.TRAINABLE_VARIABLES,self.scope)
+		global_var = tf.get_collection(tf.Graphykeys.TRAINABLE_VARIABLES,'global/critic')
+        weight_decay = tf.add_n([L2 * tf.nn.l2_loss(var) for var in local_var])
+        self.cost = tf.reduce_mean(tf.square(self.y_input - self.value)) + weight_decay
+		self.optimizer= trainer
+        self.parameters_gradients,_ = zip(*self.optimizer.compute_gradients(self.cost,local_var))
+        self.parameters_graidents,self.global_norm = tf.clip_by_global_norm(self.parameters_gradients,5.0)
+        self.optimizer = self.optimizer.apply_gradients(zip(self.parameters_gradients,global_var))
+        self.action_gradients = tf.gradients(self.value,self.inputs_action)
+    
+	def q_value(sess,states,actions,rnn_state):
+		feed_dict = {self.inputs:states,self.inputs_action:actions,self.state_in[0]:rnn_state[0],self.state_in[1]:rnn_state[1]}
+		return sess.run(self.value,feed_dict=feed_dict)
+		
+	def train(y_input,states,actions,rnn_state):
+		feed_dict = {self.y_input:y_input,self.inputs:states,self.inputs_action:actions,self.state_in[0]:rnn_state[0],self.state_in[1]:rnn_state[1]}
+		return sess.run([self.optimizer,self.cost],feed_dict=feed_dict)
+		
+	def gradient(state,actions,rnn_state):
+		feed_dict = {self.inputs:states,self.inputs_action:actions,self.state_in[0]:rnn_state[0],self.state_in[1]:rnn_state[1]}
+		return sess.run(self.action_gradients,feed_dict=feed_dict)
                 
 # VMWM Worker------------------------------------------------------------------------------------------------------------
 class Worker():
-    def __init__(self,name,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale,is_training):
+    def __init__(self,name,global_actor_target,global_critic_target,s_size,a_size,trainer_actor,trainer_critic,TAU,replay_buffer,model_path,global_episodes,noise,grayScale,is_training):
         self.name = "worker_" + str(name)
         self.number = name        
         self.model_path = model_path
-        self.trainer = trainer
+		
+        self.trainer_actor = trainer_actor
+		self.trainer_critic = trainer_critic
         self.global_episodes = global_episodes
         self.increment = self.global_episodes.assign_add(1)
         self.episode_rewards = []
         self.episode_lengths = []
         self.episode_mean_values = []
         self.summary_writer = tf.summary.FileWriter("train_"+str(self.number))
-        self.noisy = noisy
+        self.noise = noise
         self.grayScale = grayScale
         self.is_training = is_training
+		self.replay_buffer = self.replay_buffer
 
         #Create the local copy of the network and the tensorflow op to copy global paramters to local network
-        self.local_AC = AC_Network(s_size,a_size,self.name,trainer,noisy,grayScale)
-        self.update_local_ops = update_target_graph('global',self.name)        
+        self.local_Actor = Actor_Network(s_size,a_size,self.name+'/actor',trainer_actor,grayScale)
+		self.local_Critic = Critic_Network(s_size,a_size,self.name+'/critic',trainer_critic,grayScale)
+		# copy global networks parameters to local networks
+        self.update_local_actor = update_target_graph('global/actor',self.name+'/actor')
+        self.update_local_critic = update_target_graph('global/critic',self.name+'/critic')
+		
+		self.global_actor_target_network = global_actor_target
+		self.global_critic_target_network = global_critic_target
+		
+        # update global target network
+		self.update_target_network = update_target_network(TAU)        
         
         #Set up actions
         self.actions = np.identity(a_size,dtype=bool).tolist()
@@ -274,14 +260,51 @@ class Worker():
             # Set up OpenCV Window
             cv2.startWindowThread()
         
-    def train(self,rollout,sess,gamma,bootstrap_value):
-        rollout = np.array(rollout)
-        observations = rollout[:,0]
-        actions = rollout[:,1]
-        rewards = rollout[:,2]
-        next_observations = rollout[:,3] # Aug 1st, notice next observation is never used
-        values = rollout[:,5]
+    def train(self):
+        episodes = np.array(self.memory_buffer.get_episodes())
+		
         
+		        # Sample a random minibatch of N sequences from replay buffer
+        minibatch = self.replay_buffer.get_batch(BATCH_SIZE)
+        # Construct histories
+        observations = []
+        next_observations = []
+        actions = []
+        rewards = []
+        dones = []
+        for each in minibatch:
+            for i in range(1,len(each.observations)):
+                observations.append(self.pad(each.observations[0:i]))
+                next_observations.append(self.pad(each.observations[1,i+1]))
+                actions.append(each.actions[0:i-1])
+                rewards.append(each.rewards[0:i])
+                if i == len(each.observations) - 1:
+                    dones.append(True)
+                else:
+                    dones.append(False)
+        # Calculate y_batch
+        next_action_batch = self.actor_network.target_action(observations)
+        q_value_batch = self.critic_network.target_q(next_observations,[self.pad(i+j) for (i,j) in zip(actions,next_action_batch)])
+        y_batch = []
+        for i in range(len(observations)):
+            if dones[i]:
+                y_batch.append(rewards[i][-1])
+            else:
+                y_batch.append(rewards[i][-1] + GAMMA * q_value_batch[i])
+        y_batch = np.resize(y_batch,[len(observations),1])
+        # Update critic by minimizing the loss L
+        self.critic_network.train(y_batch,observations,[self.pad(i) for i in actions])
+
+        # Update the actor policy using the sampled gradient:
+        action_batch_for_gradients = self.actor_network.actions(observations)
+        q_gradient_batch = self.critic_network.gradients(observations,action_batch_for_gradients)
+
+        self.actor_network.train(q_gradient_batch,observations)
+
+        # Update the target networks
+        self.actor_network.update_target()
+        self.critic_network.update_target()
+		
         # Here we take the rewards and values from the rollout, and use them to 
         # generate the advantage and discounted returns. 
         # The advantage function uses "Generalized Advantage Estimation"
@@ -320,13 +343,16 @@ class Worker():
         with sess.as_default(), sess.graph.as_default():
             #not_start_training_yet = True
             while not coord.should_stop():
+            
+                if episode_count >= 5001:
+                    break
                 
                 sess.run(self.update_local_ops)
                 episode_buffer = []
                 episode_values = []
                 episode_frames = []
                 episode_reward = 0
-                episode_step_count = 0
+                episode_len = 0
                 d = False
                 
                 self.env.start_trial()
@@ -400,11 +426,10 @@ class Worker():
                     episode_reward += r
                     s = s1
                     total_steps += 1
-                    episode_step_count += 1
-                    
+                    '''
                     # If the episode hasn't ended, but the experience buffer is full, then we
                     # make an update step using that experience rollout.
-                    if len(episode_buffer) == 30 and d != True and episode_step_count != max_episode_length - 1: # change pisode length to 5, and try to modify Worker.train() function to utilize the next frame to train imagined frame.
+                    if len(episode_buffer) == 30 and d != True: # change pisode length to 5, and try to modify Worker.train() function to utilize the next frame to train imagined frame.
                         # Since we don't know what the true final return is, we "bootstrap" from our current
                         # value estimation.
                         v1 = sess.run(self.local_AC.value, 
@@ -415,12 +440,13 @@ class Worker():
                             v_l,p_l,e_l,g_n,v_n = self.train(episode_buffer,sess,gamma,v1)
                         episode_buffer = []
                         sess.run(self.update_local_ops)
-                        
+                        '''
                     if d == True:
                         break
-                                   
+                        
+                episode_len = self.env.get_episode_length()            
                 self.episode_rewards.append(episode_reward)
-                self.episode_lengths.append(episode_step_count)
+                self.episode_lengths.append(episode_len)
                 self.episode_mean_values.append(np.mean(episode_values))
                 
                 # Update the network using the experience buffer at the end of the episode.
@@ -452,13 +478,13 @@ class Worker():
                         images = np.array(episode_frames)
                         make_gif(images,'./frames/image'+str(episode_count)+'.gif',
                             duration=len(images)*time_per_step,true_image=True,salience=False)
-                        sleep(5)
+                        sleep(1)
                         print("Episode "+str(episode_count)+" score: %d" % episode_reward)
                         print("Episodes so far mean reward: %d" % mean_reward)
-                    if episode_count % 25 == 0 and self.name == 'worker_0' and self.is_training:
+                    if episode_count % 100 == 0 and self.name == 'worker_0' and self.is_training:
                         saver.save(sess,self.model_path+'/model-'+str(episode_count)+'.cptk')
                         print ("Saved Model")
-                        sleep(15)
+                        sleep(1)
                 if self.name == 'worker_0' and self.is_training:
                     sess.run(self.increment)
                     

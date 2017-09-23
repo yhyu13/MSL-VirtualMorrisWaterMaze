@@ -116,6 +116,11 @@ class VMWMGame:
             #print(self.decode(message[len("EpisodeEnd"):]))
             return {'type':"EpisodeEnd", 
                     'value': self.decode(message[len("EpisodeEnd"):])}
+        elif message[0:len("EpisodeLen")] == bytes("EpisodeLen",'utf8'):
+            # If we receive
+            #print(self.decode(message[len("EpisodeLen"):]))
+            return {'type':"EpisodeLen", 
+                    'value': float(self.decode(message[len("EpisodeLen"):]))}
         else:
             # Default messages are returned as-is (with type as None and value as message)
             return {'type': None, 
@@ -279,11 +284,48 @@ class VMWMGame:
                         parsed_message = self.parse_message(message=data[0:idx])
                         
                         if parsed_message['type'] == 'EpisodeEnd':
-                            # return ScreenImage
+                            # return episode is finsihed
                             if parsed_message['value'] == 'True':
                                 return True
                             else:
                                 return False
+            end = time.time()
+        print("Doesn't read episode info.")
+        
+    def get_episode_length(self):
+        '''
+            return True: the episode (trial) is finished, otherwise return False
+        '''
+        # Data Buffer
+        BUFFER_SIZE = 1024
+        data = b''
+        # End Message Token
+        END_TOKEN = "<EOF>"
+        
+        self.s.send(bytes("EpisodeLen" + END_TOKEN, 'utf8'))
+        
+        start = time.time()
+        end = time.time()
+        while (end-start)<self.time_out:
+            # Wait for data and store in buffer
+            ready = select.select([self.s], [], [],0)
+            if ready[0]:
+                try:
+                    data += self.s.recv(BUFFER_SIZE)
+                except ConnectionResetError:
+                    print("The connection was closed.")
+                    break
+
+                # Check if buffer has a full message
+                if(bytes(END_TOKEN, 'utf8') in data):
+                    # Decode the message and clear it from the buffer
+                    idx = data.index(bytes(END_TOKEN, 'utf8'))
+                    while idx != -1:
+                        parsed_message = self.parse_message(message=data[0:idx])
+                        
+                        if parsed_message['type'] == 'EpisodeLen':
+                            # return episode length
+                            return parsed_message['value']
             end = time.time()
         print("Doesn't read episode info.")
         
@@ -341,7 +383,7 @@ class VMWMGame:
                     while idx != -1:
                         parsed_message = self.parse_message(message=data[0:idx])
                         if parsed_message['type'] == 'Reward':
-                            # return ScreenImage
+                            # return reward
                             return parsed_message['value']
             end = time.time()
         print("Doesn't read reward.")
@@ -376,7 +418,7 @@ class VMWMGame:
                     while idx != -1:
                         parsed_message = self.parse_message(message=data[0:idx])
                         if parsed_message['type'] == 'Score':
-                            # return ScreenImage
+                            # return score
                             return parsed_message['value']
             end = time.time()
         print("Doesn't read score.")
