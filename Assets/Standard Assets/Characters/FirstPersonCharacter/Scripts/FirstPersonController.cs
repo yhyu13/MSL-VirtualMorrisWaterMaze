@@ -13,6 +13,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private bool m_humanPlayerMode = false; //false; //change
         private int m_turnDirection;//= 1; //change
         private float m_turnMagnitude;//= 30.0f; //change
+        private float m_moveDirection=1f;
         public float penalty_reward = 0f; //change
         public float penalty_score = 0f; //change
         private float penalty_coff = 0.01f; //change
@@ -66,6 +67,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             m_turnDirection = direc;
             m_turnMagnitude = magni;
+        }
+
+        public void setMoveDirection(float direc)
+        {
+            m_moveDirection = direc;
         }
 
         public void SetWalkSpeed(float s)
@@ -143,7 +149,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                m_CharacterController.height/2f, ~0, QueryTriggerInteraction.Ignore);
 
             // always move along the camera forward as it is the direction that it being aimed at
-            m_MoveDir = transform.rotation * Vector3.forward * speed;
+            m_MoveDir = transform.rotation * Vector3.forward * speed * m_moveDirection;
             //change July 31th
             /*
             bool reachBoundary = Vector3.Distance(Vector3.zero, transform.position) > 18;

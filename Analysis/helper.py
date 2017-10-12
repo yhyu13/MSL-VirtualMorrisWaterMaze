@@ -20,6 +20,19 @@ def update_target_graph(from_scope,to_scope):
     for from_var,to_var in zip(from_vars,to_vars):
         op_holder.append(to_var.assign(from_var))
     return op_holder
+	
+def update_target_network(TAU):
+	net_actor = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global/actor')
+	net_critic = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global/critic')
+	net_actor_target = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global/actor/target')
+	net_critic_target = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'global/critic/target')
+	update_target = []
+	for net,net_target in zip(net_actor, net_actor_target):
+		update_target.append(net_target.assign(tf.add(tf.multiply(TAU,net),tf.multiply(1.-TAU,net_target))))
+	for net,net_target in zip(net_critic, net_critic_target):
+		update_target.append(net_target.assign(tf.add(tf.multiply(TAU,net),tf.multiply(1.-TAU,net_target))))
+	return update_target
+	
     
 def process_salient_object(s):
     #print(s.shape())

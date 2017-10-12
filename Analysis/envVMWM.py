@@ -192,6 +192,7 @@ class VMWMGame:
         '''
         END_TOKEN = "<EOF>"
         # Set Start Trial Option
+        #print(self.trial_name)
         self.s.send(bytes(self.trial_name + END_TOKEN, 'utf8'))
         # Start Scene
         self.s.send(bytes("Scene1" + END_TOKEN, 'utf8'))
@@ -290,7 +291,8 @@ class VMWMGame:
                             else:
                                 return False
             end = time.time()
-        print("Doesn't read episode info.")
+        print("Doesn't read episode end")
+        return True
         
     def get_episode_length(self):
         '''
@@ -327,7 +329,8 @@ class VMWMGame:
                             # return episode length
                             return parsed_message['value']
             end = time.time()
-        print("Doesn't read episode info.")
+        print("Doesn't read episode length")
+        return None
         
     def display_value(self,value):
         '''
@@ -338,19 +341,21 @@ class VMWMGame:
         END_TOKEN = "<EOF>"
         self.s.send(bytes("Value"+ ('%.2f' % value) + END_TOKEN, 'utf8'))
         
-    def make_action(self,direc,magni):
+    def make_action(self,direcTurn,magniTurn,direcMove):
         '''
            set message as "Rotate"+"1"+"22.5" for example.
            "1"=stay course
            "2"=turn right
            "0"=turn left
         '''
-        direc = str(direc)
-        magni = str(magni)
-        
+        direcTurn = str(direcTurn)
+        magniTurn = str(magniTurn)
+        direcMove = str(direcMove)
+        #print(direcTurn,magniTurn,direcMove)
         # End Message Token
         END_TOKEN = "<EOF>"
-        self.s.send(bytes("Rotate"+direc+magni + END_TOKEN, 'utf8'))
+        self.s.send(bytes("Rotate"+direcTurn+magniTurn + END_TOKEN, 'utf8'))
+        self.s.send(bytes("Move"+"0"+direcMove + END_TOKEN, 'utf8'))
     
     
     def get_reward(self):
@@ -387,6 +392,7 @@ class VMWMGame:
                             return parsed_message['value']
             end = time.time()
         print("Doesn't read reward.")
+        return None
         
     def get_score(self):
         '''

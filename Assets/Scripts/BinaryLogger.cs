@@ -57,7 +57,7 @@ public class BinaryLogger : MonoBehaviour {
         doRecord = iterations %  recordEveryWhatPercent == 0;
         doRecord = (iterations == 0) ? false : doRecord;
         // always record binary logger //change Aug 12th
-        //doRecord = true;
+        doRecord = false;
         if (!doRecord) // change
         {
             return;

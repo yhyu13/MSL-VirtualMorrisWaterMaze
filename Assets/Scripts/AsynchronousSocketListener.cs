@@ -215,6 +215,18 @@ public class AsynchronousSocketListener : MonoBehaviour
                 FPScontroller.setTurnDirectionAndMagnitude(direc, magni);
             }
         }
+        else if (m.Type == "Move")
+        {
+            //Execute simulate keystroke
+            //change
+            string temp = (string)m.Value;
+            //int direc = temp[0] - '1'; // because char internally is a number, to get its true numeric value, just subtract '0'
+            float speed = float.Parse(temp.Substring(1));
+            if (FPScontroller != null)
+            {
+                FPScontroller.setMoveDirection(speed);
+            }
+        }
         else if (m.Type == "Reward")
         {
             if (CollisionEventTrigger != null)
@@ -341,6 +353,11 @@ public class AsynchronousSocketListener : MonoBehaviour
             {
                 Type = "Rotate";
                 Value = data.Replace("Rotate", "").Replace(AsynchronousSocketListener.endToken, "").Trim();
+            }
+            else if (data.StartsWith("Move"))
+            {
+                Type = "Move";
+                Value = data.Replace("Move", "").Replace(AsynchronousSocketListener.endToken, "").Trim();
             }
             else if (data.StartsWith("Reward"))
             {

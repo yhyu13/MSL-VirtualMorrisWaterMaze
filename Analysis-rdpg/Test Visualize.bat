@@ -1,2 +1,0 @@
-python2 MSL_VMWM_Visualizer.py
-pause

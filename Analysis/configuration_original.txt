@@ -55,14 +55,14 @@ TimeoutInMilliseconds=15000
 PlatformPosition=-7.0,12.0
 PlayerStartPosition=10.0,-10.0
 PlayerStartOrientationRadians=0.0
-FlagsVisible=0
+FlagsVisible=1
 PlatformVisible=0
 HillsVisible=0
 LandmarkVisibilities=1
 PlatformTriggerEnabled=1
 NumberOfExecutions=2000
 SoundEffectsEnabled=1
-MovementSpeed=7
+MovementSpeed=5
 [Practice - Flags]
 TimeoutInMilliseconds=None
 PlatformPosition=5.0,-7.0

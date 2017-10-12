@@ -1,32 +1,34 @@
-from model import *
+from modelCA3C import *
 import sys
 import os
 #from inspect_checkpoints import print_tensors_in_checkpoint_file
 checkpoints_dir = './tmp/checkpoints'
 import argparse
+from replay_buffer import *
+from ou_noise import *
 
 def main():
 
     parser = argparse.ArgumentParser(description='Train or test neural net motor controller')
     parser.add_argument('--load_model', dest='load_model', action='store_true', default=False)
-    parser.add_argument('--num_workers', dest='num_workers',action='store',default=4,type=int)
+    parser.add_argument('--num_workers', dest='num_workers',action='store',default=1,type=int)
     args = parser.parse_args()
     max_episode_length = 200
+    batch_size = 1
     gamma = .99 # discount rate for advantage estimation and reward discounting
     s_size = 160*160
-    a_size = 3 # Agent can move Left, Right, or Straight
+    a_size = 2 # Agent can turn or move with two floating number whose sign determines direction
     model_path = './model'
     gray = True
     load_model = args.load_model
     num_workers = args.num_workers
-    noisy = False # enable noisy dense layer to encourage exploration.
+    noise =  OUNoise(2)# enable noisy dense layer to encourage exploration.
     print(" num_workers = %d" % num_workers)
-    print(" noisy_enabled = %s" % str(noisy))
     
     print('''
     gamma = .99 # discount rate for advantage estimation and reward discounting
     s_size = 160*160 
-    a_size = 3 # Agent can move Left, Right, or Straight
+    a_size = 2 # Agent can move Left, Right, or Straight
     model_path = './model'
     ''')
 
@@ -36,18 +38,25 @@ def main():
         os.makedirs(model_path)
         
     #Create a directory to save episode playback gifs to
+    
     if not os.path.exists('./frames'):
         os.makedirs('./frames')
 
     with tf.device("/cpu:0"): 
         global_episodes = tf.Variable(0,dtype=tf.int32,name='global_episodes',trainable=False)
-        trainer = tf.train.AdamOptimizer(learning_rate=1e-4)
-        master_network = AC_Network(s_size,a_size,'global',None,noisy,grayScale=gray) # Generate global network
+        trainer_a = tf.train.AdamOptimizer(learning_rate=1e-3)
+        trainer_c = tf.train.AdamOptimizer(learning_rate=5e-3)
+        master_network_1 = Actor_Network(s_size,a_size,'global/actor',None,grayScale=gray) # Generate global network
+        master_network_2 = Critic_Network(s_size,a_size,'global/critic',None,grayScale=gray)
+        master_network_3 = Actor_Network(s_size,a_size,'global/actor/target',None,grayScale=gray)
+        master_network_4 = Critic_Network(s_size,a_size,'global/critic/target',None,grayScale=gray)
         num_cpu = multiprocessing.cpu_count() # Set workers ot number of available CPU threads
         workers = []
+        #replay_buffer = ReplayBuffer(1000)
             # Create worker classes
         for i in range(num_workers):
-            worker = Worker(i,s_size,a_size,trainer,model_path,global_episodes,noisy,grayScale=gray,is_training= True)
+            # name,global_actor_target,global_critic_target,s_size,a_size,trainer_actor,trainer_critic,gamma,TAU,replay_buffer,model_path,global_episodes,noise,grayScale,is_training
+            worker = Worker(i,master_network_3,master_network_4,s_size,a_size,trainer_a,trainer_c,0.99,1e-2,batch_size,None,model_path,global_episodes,noise=noise,grayScale=gray,is_training= True)
             workers.append(worker)
             worker.start(setting=0)
         saver = tf.train.Saver(max_to_keep=5)
