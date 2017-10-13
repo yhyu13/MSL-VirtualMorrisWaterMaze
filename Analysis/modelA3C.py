@@ -261,10 +261,13 @@ class Worker():
                     
                     a_turn = np.argmax(a_turn == np.random.choice(a_turn,p=a_turn))
                     a = a_turn
-                    self.env.make_action(a_turn,100,1)
+                    self.env.make_action(a_turn,150,1)
                     #sleep(0.01)
                     r = self.env.get_reward()
-                    if r is None: r = 0.0
+                    if r is None: 
+                        r = 0.0
+                    else:
+                        r *= 20
                     #sleep(0.01)
                     d = self.env.is_episode_finished()
                     if d == False:
@@ -308,7 +311,7 @@ class Worker():
                             v_l,p_l,e_l,g_n = self.train(episode_buffer,sess,gamma,v1)
                         episode_buffer = []
                         sess.run(self.update_local_ops)
-					'''
+                    '''
                     if d == True:
                         break
                 
